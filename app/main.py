@@ -46,23 +46,25 @@ def service_connection(key, mask):
     data = key.data
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(1024)
-        # if recv_data:
-        #     data.outb += recv_data
-        #     print("Received", repr(recv_data), "from", data.addr)
-        # else:
-        #     print("Closing connection to", data.addr)
-        #     sel.unregister(sock)
-        #     sock.close()
         if recv_data:
+            data.outb += recv_data
             print("Received", repr(recv_data), "from", data.addr)
-            sock.sendall(b"+PONG\r\n")
+        else:
+            print("Closing connection to", data.addr)
             sel.unregister(sock)
             sock.close()
+        # if recv_data:
+        #     print("Received", repr(recv_data), "from", data.addr)
+        #     sock.send(b"+PONG\r\n")
+        #     sel.unregister(sock)
+        #     sock.close()
     if mask & selectors.EVENT_WRITE:
-        sock.sendall(b"+PONG\r\n")
+        # sock.sendall(b"+PONG\r\n")
         # data.outb = data.outb[sent:]
-        # if data.outb:
-        #     print("Echoing", repr(data.outb), "to", data.addr)
+        if data.outb:
+            print("Echoing", repr(data.outb), "to", data.addr)
+            sent = sock.sendall(b"+PONG\r\n")
+            data.outb = data.outb[sent:]
         sock.close()
         sel.unregister(sock) 
 
