@@ -28,9 +28,7 @@ def initialize_server(port=6379):
 
 def handle_client(client_socket):
     while True:
-        data = client_socket.recv(1024)
-        if not data:
-            break
+        data = read_message(client_socket)
         print(f"Received message: {data}")
         # commands = parse_commands(message)
         # print("Received commands: ", commands)
