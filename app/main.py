@@ -59,6 +59,7 @@ def service_connection(key, mask):
         # if data.outb:
         #     print("Echoing", repr(data.outb), "to", data.addr)
         sock.close()
+        sel.unregister(sock)
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
