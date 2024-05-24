@@ -1,7 +1,10 @@
 import socket
+import selectors
+import types
 
 sample_message1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
 sample_message2 = b'*1\r\n$4\r\nPING\r\n'
+sel = selectors.DefaultSelector()
 
 def parse_commands(message):
     parts = message.strip().split(b"\r\n")
@@ -20,11 +23,6 @@ def read_message(client_socket):
             break
     return message
 
-def initialize_server(port=6379):
-    server_socket = socket.create_server(("localhost", port), reuse_port=True)
-    client_socket, addr = server_socket.accept() # wait for client
-    print(f"Received the connection from the client {addr}")
-    return client_socket
 
 def handle_client(client_socket):
     while True:
@@ -36,13 +34,55 @@ def handle_client(client_socket):
     client_socket.close()
 
 
+def accept_wrapper(server_socket):
+    client_socket, addr = server_socket.accept()
+    print(f"Accepted connection from {addr}")
+    client_socket.setblocking(False)
+    data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
+    sel.register(client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data)
+
+def service_connection(key, mask):
+    sock = key.fileobj
+    data = key.data
+    if mask & selectors.EVENT_READ:
+        recv_data = sock.recv(1024)
+        if recv_data:
+            data.outb += recv_data
+            print("Received", repr(recv_data), "from", data.addr)
+        else:
+            print("Closing connection to", data.addr)
+            sel.unregister(sock)
+            sock.close()
+    if mask & selectors.EVENT_WRITE:
+        sock.sendall(b"+PONG\r\n")
+        # data.outb = data.outb[sent:]
+        # if data.outb:
+        #     print("Echoing", repr(data.outb), "to", data.addr)
+
+def initialize_server(port=6379):
+    server_socket = socket.create_server(("localhost", port), reuse_port=True)
+    server_socket.listen()
+    print(f"Listening on port {port}")
+    server_socket.setblocking(False)
+    sel.register(server_socket, selectors.EVENT_READ, data=None)
+
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
+    initialize_server()
+    try:
+        while True:
+            events = sel.select(timeout=None)
+            for key, mask in events:
+                if key.data is None:
+                    accept_wrapper(key.fileobj)
+                else:
+                    service_connection(key, mask)
+    except KeyboardInterrupt:
+        print("Caught keyboard interrupt, exiting")
+    finally:
+        sel.close()
 
-    client_socket = initialize_server()
 
-    handle_client(client_socket)
 
 
 if __name__ == "__main__":
