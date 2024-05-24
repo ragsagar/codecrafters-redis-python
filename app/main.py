@@ -20,20 +20,28 @@ def read_message(client_socket):
             break
     return message
 
+def initialize_server(port=6379):
+    server_socket = socket.create_server(("localhost", port), reuse_port=True)
+    client_socket, addr = server_socket.accept() # wait for client
+    print(f"Received the connection from the client {addr}")
+    return client_socket
+
+def handle_client(client_socket):
+    while True:
+        message = read_message(client_socket)
+        print(f"Received message: {message}")
+        commands = parse_commands(message)
+        print("Received commands: ", commands)
+        if commands[0] == b"PING":
+            client_socket.sendall(b"+PONG\r\n")
+
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
-    server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    client_socket, addr = server_socket.accept() # wait for client
-    print(f"Received the connection from the client {addr}")
+    client_socket = initialize_server()
 
-    message = read_message(client_socket)
-    print(f"Received message: {message}")
-    commands = parse_commands(message)
-    print("Received commands: ", commands)
-    # if commands[0] == b"PING":
-    client_socket.sendall(b"+PONG\r\n")
+    handle_client(client_socket)
 
 
 if __name__ == "__main__":
