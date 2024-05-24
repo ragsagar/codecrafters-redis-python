@@ -54,10 +54,11 @@ def service_connection(key, mask):
             sel.unregister(sock)
             sock.close()
     if mask & selectors.EVENT_WRITE:
-        sock.send(b"+PONG\r\n")
+        sock.sendall(b"+PONG\r\n")
         # data.outb = data.outb[sent:]
         # if data.outb:
         #     print("Echoing", repr(data.outb), "to", data.addr)
+        sock.close()
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
