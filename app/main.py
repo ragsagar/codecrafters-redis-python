@@ -60,7 +60,8 @@ def service_connection(key, mask):
         #     print("Echoing", repr(data.outb), "to", data.addr)
 
 def initialize_server(port=6379):
-    server_socket = socket.create_server(("localhost", port), reuse_port=True)
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', port))
     server_socket.listen()
     print(f"Listening on port {port}")
     server_socket.setblocking(False)
