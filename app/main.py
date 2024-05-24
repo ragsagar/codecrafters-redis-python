@@ -28,12 +28,15 @@ def initialize_server(port=6379):
 
 def handle_client(client_socket):
     while True:
-        message = read_message(client_socket)
-        print(f"Received message: {message}")
-        commands = parse_commands(message)
-        print("Received commands: ", commands)
-        if commands[0] == b"PING":
-            client_socket.sendall(b"+PONG\r\n")
+        data = client_socket.recv(1024)
+        if not data:
+            break
+        print(f"Received message: {data}")
+        # commands = parse_commands(message)
+        # print("Received commands: ", commands)
+        client_socket.sendall(b"+PONG\r\n")
+    client_socket.close()
+
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
