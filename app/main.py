@@ -54,7 +54,7 @@ def service_connection(key, mask):
             sel.unregister(sock)
             sock.close()
     if mask & selectors.EVENT_WRITE:
-        sock.sendall(b"+PONG\r\n")
+        sock.send(b"+PONG\r\n")
         # data.outb = data.outb[sent:]
         # if data.outb:
         #     print("Echoing", repr(data.outb), "to", data.addr)
