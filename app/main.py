@@ -74,6 +74,7 @@ def service_connection(key, mask):
                     if expiry_command.upper() == "PX":
                         expiry_value = int(incoming[4])
                         expiry_time = time.time() + expiry_value
+                print(f"Setting key {key} to value {value} with expiry time {expiry_time}")
                 data.map_store[key] = {"value": value, "expiry_time": expiry_time}
                 sock.sendall(get_success_message())
             data.outb = b''
