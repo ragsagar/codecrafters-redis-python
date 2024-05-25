@@ -137,7 +137,7 @@ def main():
     parser.add_argument("--test", action="store_true", help="Run tests")
     parser.add_argument("--replicaof", type=str, help="Replicate data from another server")
     args = parser.parse_args()
-    replicate_server = args.replicaof.split(" ") if args.replicaof else None
+    replicate_server = args.replicaof.split(" ") if args.replicaof else []
     print("Replicate server", replicate_server)
     if args.test:
         run_test()
