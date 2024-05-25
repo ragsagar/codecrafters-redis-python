@@ -51,6 +51,7 @@ def handle_set_command(data, incoming):
     print(f"Setting key {key} to value {value} with expiry time {expiry_time}")
     data.map_store[key] = {"value": value, "expiry_time": expiry_time}
     data.outb = b''
+    return get_success_message()
 
 def handle_get_command(data, incoming):
     key = incoming[1]
