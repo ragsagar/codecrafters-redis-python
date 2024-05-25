@@ -46,11 +46,14 @@ class RedisServer:
           commands.append(parts[i*2+2].decode())
       return commands
 
+  def _construct_line(self, message):
+      return f"${len(message)}\r\n{message}\r\n"
+
   def encode_command(self, message):
-      return f"${len(message)}\r\n{message}\r\n".encode()
+      return self._construct_line(message).encode()
   
   def encode_commands(self, messages):
-      return "".join([self.encode_command(message) for message in messages])
+      return "".join([self._construct_line(message) for message in messages])
 
   def get_null_message(self):
       return b"$-1\r\n"
