@@ -107,6 +107,7 @@ class RedisServer:
             f"master_replid:{self.get_replid()}",
             f"master_repl_offset:{self.get_repl_offset()}"
         ]
+        self.log("Sending", messages)
         response_msg = self.encode_commands(messages)
     else:
         response_msg = self.encode_command(f"role:{server_type.value}")
