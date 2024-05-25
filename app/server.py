@@ -215,6 +215,7 @@ class MasterConnectionState(Enum):
     WAITING_FOR_PING = "waiting_for_ping"
     WAITING_FOR_PORT = "waiting_for_port"
     WAITING_FOR_CAPA = "waiting_for_capa"
+    WAITING_FOR_PSYNC = "waiting_for_psync"
     READY = "ready"
 
 
@@ -223,6 +224,8 @@ class MasterConnection:
     server = None
     port = None
     listening_port = None
+    replica_id = "?"
+    offset = -1
 
     def __init__(self, server, port, listening_port):
         self.server = server
@@ -242,8 +245,6 @@ class MasterConnection:
                 self.log("Closing connection to", data.addr)
                 sel.unregister(sock)
                 sock.close()
-            # response_msg = self.encoder.generate_array_string(["PING"]);
-            # sock.sendall(response_msg)
         if mask & selectors.EVENT_WRITE:
             if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
@@ -265,8 +266,17 @@ class MasterConnection:
                             ["REPLCONF", "capa", "psync2"]
                         )
                     )
+                    self.state = MasterConnectionState.WAITING_FOR_PSYNC
+                elif self.state == MasterConnectionState.WAITING_FOR_PSYNC:
+                    print("Sending capa to master")
+                    sock.sendall(
+                        self.encoder.generate_array_string(
+                            ["PSYNC", self.replica_id, str(self.offset)]
+                        )
+                    )
                     self.state = MasterConnectionState.READY
                     print("Master connection ready")
+
                 data.outb = b""
             # if data.outb:
             #     incoming = self.parse_message_from_master(data.outb)
