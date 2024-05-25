@@ -103,8 +103,6 @@ def main():
                     accept_wrapper(key.fileobj)
                 else:
                     service_connection(key, mask)
-    except:
-        print("Caught keyboard interrupt, exiting")
     finally:
         sel.close()
         server_socket.close()
