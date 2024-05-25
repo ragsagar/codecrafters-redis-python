@@ -266,3 +266,6 @@ class MasterConnection:
             #     self.log(f"Received message from master {incoming}")
             #     response_msg = self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)])
             #     sock.sendall(response_msg)
+
+    def log(self, message, *args):
+        print(message, *args)
