@@ -39,6 +39,27 @@ def accept_wrapper(server_socket):
     data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"", map_store={})
     sel.register(client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data)
 
+def handle_set_command(data, incoming):
+    key = incoming[1]
+    value = incoming[2]
+    expiry_time = None
+    if len(incoming) > 4:
+        expiry_command = incoming[3]
+        if expiry_command.upper() == "PX":
+            expiry_value = int(incoming[4])
+            expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=expiry_value)
+    print(f"Setting key {key} to value {value} with expiry time {expiry_time}")
+    data.map_store[key] = {"value": value, "expiry_time": expiry_time}
+    data.outb = b''
+
+def handle_get_command(data, incoming):
+    key = incoming[1]
+    if key in data.map_store:
+        response_msg = encode_command(data.map_store[key]["value"])
+    else:
+        response_msg = get_null_message()
+    return response_msg
+
 def service_connection(key, mask):
     sock = key.fileobj
     data = key.data
@@ -57,30 +78,20 @@ def service_connection(key, mask):
             incoming = parse_message(data.outb)
             command = incoming[0].upper()
             if command == "PING":
-                print("Sending PONG")
                 sock.sendall(encode_command("PONG"))
             elif command == "ECHO":
                 echo_message = incoming[1]
-                print("Echoing message", echo_message)
                 sock.sendall(encode_command(echo_message))
             elif command == "GET":
-                key = incoming[1]
-                if key in data.map_store:
-                    sock.sendall(encode_command(data.map_store[key]["value"]))
-                else:
-                    sock.sendall(get_null_message())
+                response_msg = handle_get_command(data, incoming)
+                sock.sendall(response_msg)
             elif command == 'SET':
-                key = incoming[1]
-                value = incoming[2]
-                expiry_time = None
-                if len(incoming) > 4:
-                    expiry_command = incoming[3]
-                    if expiry_command.upper() == "PX":
-                        expiry_value = int(incoming[4])
-                        expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=expiry_value)
-                print(f"Setting key {key} to value {value} with expiry time {expiry_time}")
-                data.map_store[key] = {"value": value, "expiry_time": expiry_time}
-                sock.sendall(get_success_message())
+                response_msg = handle_set_command(data, incoming)
+                sock.sendall(response_msg)
+            elif command == 'INFO':
+                if incoming[1].upper() == "replication":
+                    response_msg = encode_command("role:master")
+                sock.sendall(response_msg)
             data.outb = b''
 
 def initialize_server(port=6379):
@@ -95,7 +106,7 @@ def initialize_server(port=6379):
 
 def main():
     print("Logs from your program will appear here!")
-    
+
     import sys
     if len(sys.argv) > 2 and sys.argv[1] == "--port":
         port = int(sys.argv[2])
