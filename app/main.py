@@ -59,7 +59,7 @@ def service_connection(key, mask):
         if data.outb:
             print(f"Sending PONG to {data.addr}")
             sent = sock.sendall(b"+PONG\r\n")
-            data.outb = None
+            data.outb = b''
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
