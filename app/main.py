@@ -2,17 +2,18 @@ import socket
 import selectors
 import types
 
-sample_message1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
-sample_message2 = b'*1\r\n$4\r\nPING\r\n'
 sel = selectors.DefaultSelector()
 
-def parse_commands(message):
+def parse_command(message):
     parts = message.strip().split(b"\r\n")
     length = int(parts[0][1:])
     commands = []
-    for _ in range(2, length+1*2, 2):
-        commands.append(message)
+    for i in range(length):
+        commands.append(parts[i*2+2].decode())
     return commands
+
+def encode_command(message):
+    return f"${len(message)}\r\n{message}\r\n".encode()
 
 def read_message(client_socket):
     message = b""
@@ -57,9 +58,13 @@ def service_connection(key, mask):
         # sock.sendall(b"+PONG\r\n")
         # data.outb = data.outb[sent:]
         if data.outb:
-            print(f"Sending PONG to {data.addr}")
-            sent = sock.sendall(b"+PONG\r\n")
-            data.outb = b''
+            commands = parse_command(data.outb)
+            if commands[0] == "PING":
+                sent = sock.sendall(encode_command("PONG"))
+                data.outb = b''
+            else:
+                sent = sock.sendall(encode_command(data.outb))
+                data.outb = data.outb[sent:]
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,6 +95,19 @@ def main():
 
 
 
+def run_test():
+    print("Running tests")
+    sample_message1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
+    sample_message2 = b'*1\r\n$4\r\nPING\r\n'
+    exp_response = ['SET', 'mykey', 'myvalue']
+    response = parse_command(sample_message1)
+    assert exp_response == response
+    assert parse_command(sample_message2) == ['PING']
+    print("All tests passed")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if sys.argv[1] == "test":
+        run_test()
+    else:
+        main()
