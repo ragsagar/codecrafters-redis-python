@@ -238,25 +238,28 @@ class MasterConnection:
             # response_msg = self.encoder.generate_array_string(["PING"]);
             # sock.sendall(response_msg)
         if mask & selectors.EVENT_WRITE:
-            if self.state == MasterConnectionState.WAITING_FOR_PING:
-                print("Sending ping to master")
-                sock.sendall(self.encoder.generate_array_string(["PING"]))
-                self.state = MasterConnectionState.WAITING_FOR_PORT
-            elif self.state == MasterConnectionState.WAITING_FOR_PORT:
-                print("Sending port to master")
-                sock.sendall(
-                    self.encoder.generate_array_string(
-                        ["REPLCONF", "listening-port", str(self.port)]
+            if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
+                if self.state == MasterConnectionState.WAITING_FOR_PING:
+                    print("Sending ping to master")
+                    sock.sendall(self.encoder.generate_array_string(["PING"]))
+                    self.state = MasterConnectionState.WAITING_FOR_PORT
+                elif self.state == MasterConnectionState.WAITING_FOR_PORT:
+                    print("Sending port to master")
+                    sock.sendall(
+                        self.encoder.generate_array_string(
+                            ["REPLCONF", "listening-port", str(self.port)]
+                        )
                     )
-                )
-                self.state = MasterConnectionState.WAITING_FOR_CAPA
-            elif self.state == MasterConnectionState.WAITING_FOR_CAPA:
-                print("Sending capa to master")
-                sock.sendall(
-                    self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"])
-                )
-                self.state = MasterConnectionState.READY
-                print("Master connection ready")
+                    self.state = MasterConnectionState.WAITING_FOR_CAPA
+                elif self.state == MasterConnectionState.WAITING_FOR_CAPA:
+                    print("Sending capa to master")
+                    sock.sendall(
+                        self.encoder.generate_array_string(
+                            ["REPLCONF", "capa", "psync2"]
+                        )
+                    )
+                    self.state = MasterConnectionState.READY
+                    print("Master connection ready")
             # if data.outb:
             #     incoming = self.parse_message_from_master(data.outb)
             #     self.log(f"Received message from master {incoming}")
