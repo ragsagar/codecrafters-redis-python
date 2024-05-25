@@ -6,7 +6,7 @@ import datetime
 
 sel = selectors.DefaultSelector()
 
-master = None
+master_details = None
 
 def parse_message(message):
     parts = message.strip().split(b"\r\n")
@@ -93,11 +93,11 @@ def service_connection(key, mask):
                 sock.sendall(response_msg)
             elif command == 'INFO':
                 if incoming[1].upper() == "REPLICATION":
-                    print(f"Replication info {master}")
-                    if master:
-                        response_msg = encode_command("role:master")
-                    else:
+                    print(f"Replication info {master_details}")
+                    if master_details:
                         response_msg = encode_command("role:slave")
+                    else:
+                        response_msg = encode_command("role:master")
                 else:
                     response_msg = encode_command("redis_version:0.0.1")
                 sock.sendall(response_msg)
@@ -115,8 +115,8 @@ def initialize_server(port=6379):
 
 def handle_server(server_socket, master_server, master_port):
     print("Master server", master_server, master_port)
-    global master
-    master = { "server": master_server, "port": master_port }
+    global master_details
+    master_details = { "server": master_server, "port": master_port }
     try:
         while True:
             events = sel.select(timeout=None)
