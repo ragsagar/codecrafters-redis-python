@@ -122,7 +122,8 @@ def run_test():
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
-        run_test()
+    if len(sys.argv) > 2 and sys.argv[1] == "--port":
+        port = int(sys.argv[2])
+        server_socket = initialize_server(port)
     else:
-        main()
+        server_socket = initialize_server()
