@@ -95,7 +95,14 @@ def initialize_server(port=6379):
 
 def main():
     print("Logs from your program will appear here!")
-    server_socket = initialize_server()
+    
+    import sys
+    if len(sys.argv) > 2 and sys.argv[1] == "--port":
+        port = int(sys.argv[2])
+        server_socket = initialize_server(port)
+    else:
+        server_socket = initialize_server()
+
     try:
         while True:
             events = sel.select(timeout=None)
@@ -121,9 +128,4 @@ def run_test():
     print("All tests passed")
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 2 and sys.argv[1] == "--port":
-        port = int(sys.argv[2])
-        server_socket = initialize_server(port)
-    else:
-        server_socket = initialize_server()
+    main()
