@@ -68,10 +68,11 @@ def initialize_server(port=6379):
     print(f"Listening on port {port}")
     server_socket.setblocking(False)
     sel.register(server_socket, selectors.EVENT_READ, data=None)
+    return server_socket
 
 def main():
     print("Logs from your program will appear here!")
-    initialize_server()
+    server_socket = initialize_server()
     try:
         while True:
             events = sel.select(timeout=None)
@@ -84,6 +85,7 @@ def main():
         print("Caught keyboard interrupt, exiting")
     finally:
         sel.close()
+        server_socket.close()
 
 
 
