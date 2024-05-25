@@ -169,6 +169,8 @@ class RedisServer:
       # master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"]))
       sock = key.fileobj
       data = key.data
+      response_msg = self.encoder.generate_array_string(["PING"]);
+      sock.sendall(response_msg)
       if mask & selectors.EVENT_READ:
           recv_data = sock.recv(1024)
           if recv_data:
