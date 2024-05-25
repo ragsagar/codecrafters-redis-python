@@ -80,7 +80,9 @@ class RedisServer:
         client_socket, addr = server_socket.accept()
         self.log(f"Accepted connection from {addr}")
         client_socket.setblocking(False)
-        data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"", map_store={})
+        data = types.SimpleNamespace(
+            addr=addr, inb=b"", outb=b"", map_store={}, master_connection=False
+        )
         sel.register(
             client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data
         )
