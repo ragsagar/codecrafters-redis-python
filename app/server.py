@@ -29,9 +29,11 @@ class RedisServer:
         self.encoder = Encoder()
         if master_server:
             self.server_type = ServerType.SLAVE
-            socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket.connect_ex((self.master_server, self.master_port))
-            socket.setblocking(False)
+            master_sock = master_sock.socket(
+                master_sock.AF_INET, master_sock.SOCK_STREAM
+            )
+            master_sock.connect_ex((self.master_server, self.master_port))
+            master_sock.setblocking(False)
             events = selectors.EVENT_READ | selectors.EVENT_WRITE
             data = types.SimpleNamespace(
                 addr=("master conn",),
@@ -41,7 +43,7 @@ class RedisServer:
                 master_connection=True,
             )
             self.master_connection = MasterConnection()
-            sel.register(socket, events, data=data)
+            sel.register(master_sock, events, data=data)
         self.debug = debug
 
     def get_server_type(self):
