@@ -2,27 +2,41 @@ import socket
 import selectors
 import types
 import datetime
+import uuid
+from enum import Enum
 
 sel = selectors.DefaultSelector()
+
+class ServerType(Enum):
+  MASTER = 'master'
+  SLAVE = 'slave'
 
 class RedisServer:
   master_server = None
   master_port = None
   debug = True
+  server_type = ServerType.MASTER
   
   def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
       self.port = port
       self.server_socket = None
       self.master_server = master_server
       self.master_port = master_port
+      self.server_type = ServerType.SLAVE if master_server else ServerType.MASTER
       self.debug = debug
 
   def get_server_type(self):
-      return "master" if self.master_server is None else "slave"
-  
+    return self.server_type
+    
   def log(self, message, *args):
       if self.debug:
           print(message, *args)
+
+  def get_repl_offset(self):
+      return 0
+
+  def get_replid(self):
+      return uuid.uuid4().hex
 
   def parse_message(self, message):
       parts = message.strip().split(b"\r\n")
@@ -34,6 +48,9 @@ class RedisServer:
 
   def encode_command(self, message):
       return f"${len(message)}\r\n{message}\r\n".encode()
+  
+  def encode_commands(self, messages):
+      return "".join([self.encode_command(message) for message in messages])
 
   def get_null_message(self):
       return b"$-1\r\n"
@@ -109,7 +126,16 @@ class RedisServer:
                   sock.sendall(response_msg)
               elif command == 'INFO':
                   if incoming[1].upper() == "REPLICATION":
-                      response_msg = self.encode_command(f"role:{self.get_server_type()}")
+                      server_type = self.get_server_type()
+                      if server_type == ServerType.MASTER:
+                          messages = [
+                              f"role:{server_type}",
+                              f"master_replid:{self.get_replid()}",
+                              f"master_repl_offset:{self.get_repl_offset()}"
+                          ]
+                          response_msg = self.encode_commands(messages)
+                      else:
+                          response_msg = self.encode_command(f"role:{server_type}")
                   else:
                       response_msg = self.encode_command("redis_version:0.0.1")
                   sock.sendall(response_msg)

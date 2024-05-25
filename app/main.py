@@ -146,13 +146,8 @@ def main():
     if args.test:
         run_test()
         return
-    # if args.port:
-    #     server_socket = initialize_server(args.port)
-    # else:
-    #     server_socket = initialize_server()
-    # handle_server(server_socket, *replicate_server)
-
-    server = RedisServer(args.port or DEFAULT_PORT, *replicate_server)
+    port = args.port if args.port else DEFAULT_PORT
+    server = RedisServer(port, debug=True, *replicate_server)
     server.run()
 
 def run_test():
