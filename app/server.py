@@ -170,8 +170,6 @@ class RedisServer:
       sock = key.fileobj
       data = key.data
       response_msg = self.encoder.generate_array_string(["PING"]);
-      self.log("Sending ping to master")
-      sock.sendall(response_msg)
       if mask & selectors.EVENT_READ:
           recv_data = sock.recv(1024)
           if recv_data:
