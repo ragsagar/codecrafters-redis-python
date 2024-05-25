@@ -101,16 +101,16 @@ class RedisServer:
 
   def handle_replication_command(self, data, incoming):
     server_type = self.get_server_type()
+    messages = [
+        f"role:{server_type.value}",
+    ]
     if server_type == ServerType.MASTER:
-        messages = [
-            f"role:{server_type.value}",
+        messages.extend([
             f"master_replid:{self.get_replid()}",
             f"master_repl_offset:{self.get_repl_offset()}"
-        ]
-        self.log("Sending", messages)
+        ])
         response_msg = self.encode_commands(messages)
-    else:
-        response_msg = self.encode_command(f"role:{server_type.value}")
+    self.log("Sending replication info", response_msg)
     return response_msg
 
   def service_connection(self, key, mask):
