@@ -93,6 +93,7 @@ def service_connection(key, mask):
                 sock.sendall(response_msg)
             elif command == 'INFO':
                 if incoming[1].upper() == "REPLICATION":
+                    print(f"Replication info {master}")
                     if master:
                         response_msg = encode_command("role:master")
                     else:
