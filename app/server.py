@@ -108,11 +108,11 @@ class RedisServer:
         f"role:{server_type.value}",
     ]
     if server_type == ServerType.MASTER:
-        messages.extend([
-            f"master_replid:{self.get_replid()}",
-            f"master_repl_offset:{self.get_repl_offset()}"
-        ])
-        response_msg = self.encode_array(messages)
+      messages.extend([
+          f"master_replid:{self.get_replid()}",
+          f"master_repl_offset:{self.get_repl_offset()}"
+      ])
+    response_msg = self.encode_array(messages)
     self.log("Sending replication info", response_msg)
     return response_msg
 
