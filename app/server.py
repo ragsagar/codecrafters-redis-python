@@ -30,6 +30,7 @@ class RedisServer:
           master_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
           master_connection.connect_ex((self.master_server, self.master_port))
           master_connection.setblocking(False)
+          master_connection.sendall(self.encoder.generate_array_string(["PING"]))
           events = selectors.EVENT_READ | selectors.EVENT_WRITE
           data = types.SimpleNamespace(addr=('master conn',), inb=b"", outb=b"", map_store={}, master_connection=True)
           sel.register(master_connection, events, data=data)
@@ -164,30 +165,29 @@ class RedisServer:
       sel.register(self.server_socket, selectors.EVENT_READ, data=None)
 
   def service_master_connection(self, key, mask):
-      # master_connection.sendall(self.encoder.generate_array_string(["PING"]))
       # master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)]))
       # master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"]))
       sock = key.fileobj
       data = key.data
       response_msg = self.encoder.generate_array_string(["PING"]);
+      self.log("Sending ping to master")
       sock.sendall(response_msg)
       if mask & selectors.EVENT_READ:
           recv_data = sock.recv(1024)
           if recv_data:
               data.outb += recv_data
               self.log("Received", repr(recv_data), "from", data.addr)
-          # else:
-          #     self.log("Closing connection to", data.addr)
-          #     sel.unregister(sock)
-          #     sock.close()
-          self.log("Sending ping to master")
-          response_msg = self.encoder.generate_array_string(["PING"]);
-          sock.sendall(response_msg)
+          else:
+              self.log("Closing connection to", data.addr)
+              sel.unregister(sock)
+              sock.close()
+          # response_msg = self.encoder.generate_array_string(["PING"]);
+          # sock.sendall(response_msg)
       if mask & selectors.EVENT_WRITE:
           if data.outb:
               incoming = self.parse_message(data.outb)
               self.log(f"Received message from master {incoming}")
-              response_msg = self.encoder.generate_array_string(["PING"]);
+              response_msg = self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)])
               sock.sendall(response_msg)
               data.outb = b''
 
