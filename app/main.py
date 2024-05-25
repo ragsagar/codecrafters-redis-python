@@ -63,6 +63,7 @@ def service_connection(key, mask):
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(('localhost', port))
     server_socket.listen()
     print(f"Listening on port {port}")
