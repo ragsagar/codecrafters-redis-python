@@ -91,6 +91,8 @@ def service_connection(key, mask):
             elif command == 'INFO':
                 if incoming[1].upper() == "replication":
                     response_msg = encode_command("role:master")
+                else:
+                    response_msg = get_null_message()
                 sock.sendall(response_msg)
             data.outb = b''
 
