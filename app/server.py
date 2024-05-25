@@ -99,6 +99,19 @@ class RedisServer:
           response_msg = self.get_null_message()
       return response_msg
 
+  def handle_replication_command(self, data, incoming):
+    server_type = self.get_server_type()
+    if server_type == ServerType.MASTER:
+        messages = [
+            f"role:{server_type.value}",
+            f"master_replid:{self.get_replid()}",
+            f"master_repl_offset:{self.get_repl_offset()}"
+        ]
+        response_msg = self.encode_commands(messages)
+    else:
+        response_msg = self.encode_command(f"role:{server_type.value}")
+    return response_msg
+
   def service_connection(self, key, mask):
       sock = key.fileobj
       data = key.data
@@ -129,18 +142,9 @@ class RedisServer:
                   sock.sendall(response_msg)
               elif command == 'INFO':
                   if incoming[1].upper() == "REPLICATION":
-                      server_type = self.get_server_type()
-                      if server_type == ServerType.MASTER:
-                          messages = [
-                              f"role:{server_type}",
-                              f"master_replid:{self.get_replid()}",
-                              f"master_repl_offset:{self.get_repl_offset()}"
-                          ]
-                          response_msg = self.encode_commands(messages)
-                      else:
-                          response_msg = self.encode_command(f"role:{server_type}")
+                    response_msg = self.handle_replication_command(data, incoming)
                   else:
-                      response_msg = self.encode_command("redis_version:0.0.1")
+                    response_msg = self.encode_command("redis_version:0.0.1")
                   sock.sendall(response_msg)
               data.outb = b''
 
