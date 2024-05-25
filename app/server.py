@@ -28,11 +28,11 @@ class RedisServer:
       if master_server:
           self.server_type = ServerType.SLAVE
           master_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-          master_connection.connect((self.master_server, self.master_port))
+          master_connection.connect_ex((self.master_server, self.master_port))
           master_connection.setblocking(False)
-          self.master_connection = master_connection
+          events = selectors.EVENT_READ | selectors.EVENT_WRITE
           data = types.SimpleNamespace(addr=('master conn',), inb=b"", outb=b"", map_store={}, master_connection=True)
-          sel.register(master_connection, selectors.EVENT_READ, data=data)
+          sel.register(master_connection, events, data=data)
       self.debug = debug
 
   def get_server_type(self):
