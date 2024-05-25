@@ -245,6 +245,9 @@ class MasterConnection:
             if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
                 if data.outb:
                     incoming = self.parse_message(data.outb)
+                    if incoming.startswith("+FULLRESYNC"):
+                        self.replica_id, self.offset = incoming.split(" ")[1:]
+                        self.log(f"Replica id {self.replica_id} offset {self.offset}")
                     self.log(f"Received message from master {incoming}")
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
                     print("Sending ping to master")
