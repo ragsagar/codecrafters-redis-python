@@ -68,7 +68,7 @@ def service_connection(key, mask):
                 echo_message = incoming[1]
                 print("Echoing message", echo_message)
                 sent = sock.sendall(encode_command(echo_message))
-                data.outb = data.outb[sent:]
+                data.outb = b''
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
