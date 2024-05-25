@@ -81,7 +81,7 @@ def main():
                     accept_wrapper(key.fileobj)
                 else:
                     service_connection(key, mask)
-    except KeyboardInterrupt:
+    except:
         print("Caught keyboard interrupt, exiting")
     finally:
         sel.close()
