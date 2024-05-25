@@ -249,7 +249,7 @@ class MasterConnection:
                     print("Sending port to master")
                     sock.sendall(
                         self.encoder.generate_array_string(
-                            ["REPLCONF", "listening-port", str(self.port)]
+                            ["REPLCONF", "listening-port", str(self.listening_port)]
                         )
                     )
                     self.state = MasterConnectionState.WAITING_FOR_CAPA
