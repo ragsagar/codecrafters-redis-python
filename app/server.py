@@ -108,6 +108,27 @@ class RedisServer:
     self.log("Sending replication info", response_msg)
     return response_msg
   
+  def _handle_get_command(self, data, incoming):
+      return self.handle_get_command(data, incoming)
+  
+  def _handle_info_command(self, data, incoming):
+    if incoming[1].upper() == "REPLICATION":
+      response_msg = self.handle_replication_command(data, incoming)
+    else:
+      response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
+    return response_msg
+  
+  def _handle_set_command(self, data, incoming):
+      return self.handle_set_command(data, incoming)
+  
+  def _handle_echo_command(self, data, incoming):
+    echo_message = incoming[1]
+    response_msg = self.encoder.generate_bulkstring(echo_message)
+    return response_msg
+  
+  def _handle_ping_command(self, data, incoming):
+    return self.encoder.generate_bulkstring("PONG")
+  
   def service_connection(self, key, mask):
       sock = key.fileobj
       data = key.data
@@ -125,20 +146,11 @@ class RedisServer:
               self.expire_data(data)
               incoming = self.parse_message(data.outb)
               command = incoming[0].upper()
-              if command == "PING":
-                  response_msg = self.encoder.generate_bulkstring("PONG")
-              elif command == "ECHO":
-                  echo_message = incoming[1]
-                  response_msg = self.encoder.generate_bulkstring(echo_message)
-              elif command == "GET":
-                  response_msg = self.handle_get_command(data, incoming)
-              elif command == 'SET':
-                  response_msg = self.handle_set_command(data, incoming)
-              elif command == 'INFO':
-                  if incoming[1].upper() == "REPLICATION":
-                    response_msg = self.handle_replication_command(data, incoming)
-                  else:
-                    response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
+              handler_func = getattr(self, f'_handle_{command}_command')
+              if not handler_func:
+                  response_msg = self.encoder.generate_bulkstring("Unknown command")
+              else:
+                  response_msg = handler_func(data, incoming)
               sock.sendall(response_msg)
               data.outb = b''
 
