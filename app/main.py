@@ -4,7 +4,7 @@ import types
 
 sel = selectors.DefaultSelector()
 
-def parse_command(message):
+def parse_message(message):
     parts = message.strip().split(b"\r\n")
     length = int(parts[0][1:])
     commands = []
@@ -58,12 +58,15 @@ def service_connection(key, mask):
         # sock.sendall(b"+PONG\r\n")
         # data.outb = data.outb[sent:]
         if data.outb:
-            commands = parse_command(data.outb)
-            if commands[0].lower() == "PING":
+            incoming = parse_message(data.outb)
+            command = incoming[0].upper()
+            if command == "PING":
+                print("Sending PONG")
                 sent = sock.sendall(encode_command("PONG"))
                 data.outb = b''
-            elif commands[0].lower() == "ECHO":
-                echo_message = commands[1]
+            elif command == "ECHO":
+                echo_message = incoming[1]
+                print("Echoing message", echo_message)
                 sent = sock.sendall(encode_command(echo_message))
                 data.outb = data.outb[sent:]
 
@@ -101,9 +104,9 @@ def run_test():
     sample_message1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
     sample_message2 = b'*1\r\n$4\r\nPING\r\n'
     exp_response = ['SET', 'mykey', 'myvalue']
-    response = parse_command(sample_message1)
+    response = parse_message(sample_message1)
     assert exp_response == response
-    assert parse_command(sample_message2) == ['PING']
+    assert parse_message(sample_message2) == ['PING']
     print("All tests passed")
 
 if __name__ == "__main__":
