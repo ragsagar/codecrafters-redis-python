@@ -1,8 +1,9 @@
 import socket
 import selectors
 import types
-import time
 import datetime
+
+from .server import RedisServer
 
 sel = selectors.DefaultSelector()
 
@@ -143,11 +144,14 @@ def main():
     if args.test:
         run_test()
         return
-    if args.port:
-        server_socket = initialize_server(args.port)
-    else:
-        server_socket = initialize_server()
-    handle_server(server_socket, *replicate_server)
+    # if args.port:
+    #     server_socket = initialize_server(args.port)
+    # else:
+    #     server_socket = initialize_server()
+    # handle_server(server_socket, *replicate_server)
+
+    server = RedisServer(args.port, *replicate_server)
+    server.run()
 
 def run_test():
     print("Running tests")
