@@ -183,11 +183,15 @@ class RedisServer:
           # sock.sendall(response_msg)
       if mask & selectors.EVENT_WRITE:
           if data.outb:
-              incoming = self.parse_message(data.outb)
+              incoming = self.parse_message_from_master(data.outb)
               self.log(f"Received message from master {incoming}")
               response_msg = self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)])
               sock.sendall(response_msg)
               data.outb = b''
+
+  def parse_message_from_master(self, message):
+    parts = message.strip().split(b"\r\n")
+    return parts[0].decode()
 
   def handle_server(self):
       try:
