@@ -1,6 +1,7 @@
 import socket
 import selectors
 import types
+import time
 
 sel = selectors.DefaultSelector()
 
@@ -20,6 +21,12 @@ def get_null_message():
 
 def get_success_message():
     return b"+OK\r\n"
+
+def expire_data(data):
+    current_time = time.time()
+    for key, obj in data.map_store.items():
+        if obj["expiry_time"] is not None and obj["expiry_time"] < current_time:
+            del data.map_store[key]
 
 def accept_wrapper(server_socket):
     client_socket, addr = server_socket.accept()
@@ -42,6 +49,7 @@ def service_connection(key, mask):
             sock.close()
     if mask & selectors.EVENT_WRITE:
         if data.outb:
+            expire_data(data)
             incoming = parse_message(data.outb)
             command = incoming[0].upper()
             if command == "PING":
@@ -54,13 +62,19 @@ def service_connection(key, mask):
             elif command == "GET":
                 key = incoming[1]
                 if key in data.map_store:
-                    sock.sendall(encode_command(data.map_store[key]))
+                    sock.sendall(encode_command(data.map_store[key]["value"]))
                 else:
                     sock.sendall(get_null_message())
             elif command == 'SET':
                 key = incoming[1]
                 value = incoming[2]
-                data.map_store[key] = value
+                expiry_time = None
+                if len(incoming) > 4:
+                    expiry_command = incoming[3]
+                    if expiry_command.upper() == "PX":
+                        expiry_value = int(incoming[4])
+                        expiry_time = time.time() + expiry_value
+                data.map_store[key] = {"value": value, "expiry_time": expiry_time}
                 sock.sendall(get_success_message())
             data.outb = b''
 
