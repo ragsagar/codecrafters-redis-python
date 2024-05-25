@@ -178,6 +178,7 @@ class RedisServer:
           #     self.log("Closing connection to", data.addr)
           #     sel.unregister(sock)
           #     sock.close()
+          self.log("Sending ping to master")
           response_msg = self.encoder.generate_array_string(["PING"]);
           sock.sendall(response_msg)
       if mask & selectors.EVENT_WRITE:
