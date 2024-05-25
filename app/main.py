@@ -6,6 +6,8 @@ import datetime
 
 sel = selectors.DefaultSelector()
 
+master = None
+
 def parse_message(message):
     parts = message.strip().split(b"\r\n")
     length = int(parts[0][1:])
@@ -91,7 +93,10 @@ def service_connection(key, mask):
                 sock.sendall(response_msg)
             elif command == 'INFO':
                 if incoming[1].upper() == "REPLICATION":
-                    response_msg = encode_command("role:master")
+                    if master:
+                        response_msg = encode_command("role:master")
+                    else:
+                        response_msg = encode_command("role:slave")
                 else:
                     response_msg = encode_command("redis_version:0.0.1")
                 sock.sendall(response_msg)
@@ -107,16 +112,10 @@ def initialize_server(port=6379):
     sel.register(server_socket, selectors.EVENT_READ, data=None)
     return server_socket
 
-def main():
-    print("Logs from your program will appear here!")
-
-    import sys
-    if len(sys.argv) > 2 and sys.argv[1] == "--port":
-        port = int(sys.argv[2])
-        server_socket = initialize_server(port)
-    else:
-        server_socket = initialize_server()
-
+def handle_server(server_socket, master_server, master_port):
+    print("Master server", master_server, master_port)
+    global master
+    master = { "server": master_server, "port": master_port }
     try:
         while True:
             events = sel.select(timeout=None)
@@ -129,7 +128,24 @@ def main():
         sel.close()
         server_socket.close()
 
-
+def main():
+    print("Logs from your program will appear here!")
+    import argparse
+    parser = argparse.ArgumentParser(description="Redis server")
+    parser.add_argument("--port", type=int, help="Port to run the server on")
+    parser.add_argument("--test", action="store_true", help="Run tests")
+    parser.add_argument("--replicaof", type=str, help="Replicate data from another server")
+    args = parser.parse_args()
+    replicate_server = args.replicaof.split(" ") if args.replicaof else None
+    print("Replicate server", replicate_server)
+    if args.test:
+        run_test()
+        return
+    if args.port:
+        server_socket = initialize_server(args.port)
+    else:
+        server_socket = initialize_server()
+    handle_server(server_socket, *replicate_server)
 
 def run_test():
     print("Running tests")
