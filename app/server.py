@@ -23,9 +23,15 @@ class RedisServer:
       self.server_socket = None
       self.master_server = master_server
       self.master_port = master_port
-      self.server_type = ServerType.SLAVE if master_server else ServerType.MASTER
-      self.debug = debug
       self.encoder = Encoder()
+      if master_server:
+          self.server_type = ServerType.SLAVE
+          master_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          master_connection.connect((master_server, master_port))
+          master_connection.setblocking(False)
+          master_connection.sendall(self.encoder.generate_array_string(["PING"]))
+          master_connection.close()
+      self.debug = debug
 
   def get_server_type(self):
     return self.server_type
