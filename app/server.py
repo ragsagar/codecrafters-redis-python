@@ -187,10 +187,6 @@ class RedisServer:
         self.server_socket.setblocking(False)
         sel.register(self.server_socket, selectors.EVENT_READ, data=None)
 
-    def parse_message_from_master(self, message):
-        parts = message.strip().split(b"\r\n")
-        return parts[0].decode()
-
     def handle_server(self):
         try:
             while True:
@@ -247,6 +243,9 @@ class MasterConnection:
                 sock.close()
         if mask & selectors.EVENT_WRITE:
             if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
+                if data.outb:
+                    incoming = self.parse_message(data.outb)
+                    self.log(f"Received message from master {incoming}")
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
                     print("Sending ping to master")
                     sock.sendall(self.encoder.generate_array_string(["PING"]))
@@ -286,3 +285,7 @@ class MasterConnection:
 
     def log(self, message, *args):
         print(message, *args)
+
+    def parse_message(self, message):
+        parts = message.strip().split(b"\r\n")
+        return parts[0].decode()
