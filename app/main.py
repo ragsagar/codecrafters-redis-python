@@ -107,7 +107,7 @@ def run_test():
 
 if __name__ == "__main__":
     import sys
-    if sys.argv[1] == "test":
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
         run_test()
     else:
         main()
