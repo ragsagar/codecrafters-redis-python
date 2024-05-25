@@ -4,6 +4,7 @@ import types
 import datetime
 import uuid
 from enum import Enum
+from .encoder import Encoder
 
 sel = selectors.DefaultSelector()
 
@@ -24,6 +25,7 @@ class RedisServer:
       self.master_port = master_port
       self.server_type = ServerType.SLAVE if master_server else ServerType.MASTER
       self.debug = debug
+      self.encoder = Encoder()
 
   def get_server_type(self):
     return self.server_type
@@ -45,24 +47,6 @@ class RedisServer:
       for i in range(length):
           commands.append(parts[i*2+2].decode())
       return commands
-
-  def _construct_line(self, message):
-      return f"${len(message)}\r\n{message}\r\n"
-
-  def encode_command(self, message):
-      return self._construct_line(message).encode()
-  
-  def encode_commands(self, messages):
-      return "".join([self._construct_line(message) for message in messages]).encode()
-  
-  def encode_array(self, messages):
-      return f"*{len(messages)}\r\n{''.join([self._construct_line(message) for message in messages])}".encode()
-
-  def get_null_message(self):
-      return b"$-1\r\n"
-
-  def get_success_message(self):
-      return b"+OK\r\n"
 
   def expire_data(self, data):
       current_time = datetime.datetime.now()
@@ -92,14 +76,14 @@ class RedisServer:
       self.log(f"Setting key {key} to value {value} with expiry time {expiry_time}")
       data.map_store[key] = {"value": value, "expiry_time": expiry_time}
       data.outb = b''
-      return self.get_success_message()
+      return self.encoder.generate_success_string()
 
   def handle_get_command(self, data, incoming):
       key = incoming[1]
       if key in data.map_store:
-          response_msg = self.encode_command(data.map_store[key]["value"])
+          response_msg = self.encoder.generate_bulkstring(data.map_store[key]["value"])
       else:
-          response_msg = self.get_null_message()
+          response_msg = self.encoder.generate_null_string()
       return response_msg
 
   def handle_replication_command(self, data, incoming):
@@ -112,10 +96,10 @@ class RedisServer:
           f"master_replid:{self.get_replid()}",
           f"master_repl_offset:{self.get_repl_offset()}"
       ])
-    response_msg = self.encode_command("\n".join(messages))
+    response_msg = self.encoder.generate_bulkstring("\n".join(messages))
     self.log("Sending replication info", response_msg)
     return response_msg
-
+  
   def service_connection(self, key, mask):
       sock = key.fileobj
       data = key.data
@@ -134,10 +118,10 @@ class RedisServer:
               incoming = self.parse_message(data.outb)
               command = incoming[0].upper()
               if command == "PING":
-                  sock.sendall(self.encode_command("PONG"))
+                  sock.sendall(self.encoder.generate_bulkstring("PONG"))
               elif command == "ECHO":
                   echo_message = incoming[1]
-                  sock.sendall(self.encode_command(echo_message))
+                  sock.sendall(self.encoder.generate_bulkstring(echo_message))
               elif command == "GET":
                   response_msg = self.handle_get_command(data, incoming)
                   sock.sendall(response_msg)
@@ -148,7 +132,7 @@ class RedisServer:
                   if incoming[1].upper() == "REPLICATION":
                     response_msg = self.handle_replication_command(data, incoming)
                   else:
-                    response_msg = self.encode_command("redis_version:0.0.1")
+                    response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
                   sock.sendall(response_msg)
               data.outb = b''
 
