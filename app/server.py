@@ -29,9 +29,7 @@ class RedisServer:
         self.encoder = Encoder()
         if master_server:
             self.server_type = ServerType.SLAVE
-            master_sock = master_sock.socket(
-                master_sock.AF_INET, master_sock.SOCK_STREAM
-            )
+            master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             master_sock.connect_ex((self.master_server, self.master_port))
             master_sock.setblocking(False)
             events = selectors.EVENT_READ | selectors.EVENT_WRITE
