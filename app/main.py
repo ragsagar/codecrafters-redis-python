@@ -15,31 +15,17 @@ def parse_message(message):
 def encode_command(message):
     return f"${len(message)}\r\n{message}\r\n".encode()
 
-def read_message(client_socket):
-    message = b""
-    while True:
-        chunk = client_socket.recv(1024)
-        message += chunk
-        if len(chunk) < 1024:
-            break
-    return message
+def get_null_message():
+    return b"$-1\r\n"
 
-
-def handle_client(client_socket):
-    while True:
-        data = read_message(client_socket)
-        print(f"Received message: {data}")
-        # commands = parse_commands(message)
-        # print("Received commands: ", commands)
-        client_socket.sendall(b"+PONG\r\n")
-    client_socket.close()
-
+def get_success_message():
+    return b"+OK\r\n"
 
 def accept_wrapper(server_socket):
     client_socket, addr = server_socket.accept()
     print(f"Accepted connection from {addr}")
     client_socket.setblocking(False)
-    data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
+    data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"", map_store={})
     sel.register(client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data)
 
 def service_connection(key, mask):
@@ -55,20 +41,28 @@ def service_connection(key, mask):
             sel.unregister(sock)
             sock.close()
     if mask & selectors.EVENT_WRITE:
-        # sock.sendall(b"+PONG\r\n")
-        # data.outb = data.outb[sent:]
         if data.outb:
             incoming = parse_message(data.outb)
             command = incoming[0].upper()
             if command == "PING":
                 print("Sending PONG")
-                sent = sock.sendall(encode_command("PONG"))
-                data.outb = b''
+                sock.sendall(encode_command("PONG"))
             elif command == "ECHO":
                 echo_message = incoming[1]
                 print("Echoing message", echo_message)
-                sent = sock.sendall(encode_command(echo_message))
-                data.outb = b''
+                sock.sendall(encode_command(echo_message))
+            elif command == "GET":
+                key = incoming[1]
+                if key in data.map_store:
+                    sock.sendall(encode_command(data.map_store[key]))
+                else:
+                    sock.sendall(get_null_message())
+            elif command == 'SET':
+                key = incoming[1]
+                value = incoming[2]
+                data.map_store[key] = value
+                sock.sendall(get_success_message())
+            data.outb = b''
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
