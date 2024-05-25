@@ -27,7 +27,7 @@ class RedisServer:
       if master_server:
           self.server_type = ServerType.SLAVE
           master_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-          master_connection.connect((master_server, master_port))
+          master_connection.connect((self.master_server, self.master_port))
           master_connection.setblocking(False)
           master_connection.sendall(self.encoder.generate_array_string(["PING"]))
           master_connection.close()
