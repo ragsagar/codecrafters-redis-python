@@ -118,22 +118,20 @@ class RedisServer:
               incoming = self.parse_message(data.outb)
               command = incoming[0].upper()
               if command == "PING":
-                  sock.sendall(self.encoder.generate_bulkstring("PONG"))
+                  response_msg = self.encoder.generate_bulkstring("PONG")
               elif command == "ECHO":
                   echo_message = incoming[1]
-                  sock.sendall(self.encoder.generate_bulkstring(echo_message))
+                  response_msg = self.encoder.generate_bulkstring(echo_message)
               elif command == "GET":
                   response_msg = self.handle_get_command(data, incoming)
-                  sock.sendall(response_msg)
               elif command == 'SET':
                   response_msg = self.handle_set_command(data, incoming)
-                  sock.sendall(response_msg)
               elif command == 'INFO':
                   if incoming[1].upper() == "REPLICATION":
                     response_msg = self.handle_replication_command(data, incoming)
                   else:
                     response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
-                  sock.sendall(response_msg)
+              sock.sendall(response_msg)
               data.outb = b''
 
   def initialize_server(self):
