@@ -59,11 +59,12 @@ def service_connection(key, mask):
         # data.outb = data.outb[sent:]
         if data.outb:
             commands = parse_command(data.outb)
-            if commands[0] == "PING":
+            if commands[0].lower() == "PING":
                 sent = sock.sendall(encode_command("PONG"))
                 data.outb = b''
-            else:
-                sent = sock.sendall(encode_command(data.outb))
+            elif commands[0].lower() == "ECHO":
+                echo_message = commands[1]
+                sent = sock.sendall(encode_command(echo_message))
                 data.outb = data.outb[sent:]
 
 def initialize_server(port=6379):
