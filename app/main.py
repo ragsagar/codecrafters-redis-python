@@ -2,6 +2,7 @@ import socket
 import selectors
 import types
 import time
+import datetime
 
 sel = selectors.DefaultSelector()
 
@@ -23,7 +24,7 @@ def get_success_message():
     return b"+OK\r\n"
 
 def expire_data(data):
-    current_time = time.time()
+    current_time = datetime.datetime.now()
     print(f"Expiring data at time {current_time}, {data.map_store}")
     for key, obj in data.map_store.items():
         if obj["expiry_time"] is not None and obj["expiry_time"] < current_time:
@@ -75,7 +76,7 @@ def service_connection(key, mask):
                     expiry_command = incoming[3]
                     if expiry_command.upper() == "PX":
                         expiry_value = int(incoming[4])
-                        expiry_time = time.time() + expiry_value
+                        expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=expiry_value)
                 print(f"Setting key {key} to value {value} with expiry time {expiry_time}")
                 data.map_store[key] = {"value": value, "expiry_time": expiry_time}
                 sock.sendall(get_success_message())
