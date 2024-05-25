@@ -30,11 +30,9 @@ class RedisServer:
           master_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
           master_connection.connect((self.master_server, self.master_port))
           master_connection.setblocking(False)
-          master_connection.sendall(self.encoder.generate_array_string(["PING"]))
-          master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)]))
-          master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"]))
           self.master_connection = master_connection
-          master_connection.close()
+          data = types.SimpleNamespace(addr=('master conn',), inb=b"", outb=b"", map_store={}, master_connection=True)
+          sel.register(master_connection, selectors.EVENT_READ, data=data)
       self.debug = debug
 
   def get_server_type(self):
@@ -165,6 +163,29 @@ class RedisServer:
       self.server_socket.setblocking(False)
       sel.register(self.server_socket, selectors.EVENT_READ, data=None)
 
+  def service_master_connection(self, key, mask):
+      # master_connection.sendall(self.encoder.generate_array_string(["PING"]))
+      # master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)]))
+      # master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"]))
+      sock = key.fileobj
+      data = key.data
+      if mask & selectors.EVENT_READ:
+          recv_data = sock.recv(1024)
+          if recv_data:
+              data.outb += recv_data
+              self.log("Received", repr(recv_data), "from", data.addr)
+          else:
+              self.log("Closing connection to", data.addr)
+              sel.unregister(sock)
+              sock.close()
+      if mask & selectors.EVENT_WRITE:
+          if data.outb:
+              incoming = self.parse_message(data.outb)
+              self.log(f"Received message from master {incoming}")
+              response_msg = self.encoder.generate_array_string(["PING"]);
+              sock.sendall(response_msg)
+              data.outb = b''
+
   def handle_server(self):
       try:
           while True:
@@ -172,6 +193,8 @@ class RedisServer:
               for key, mask in events:
                   if key.data is None:
                       self.accept_wrapper(key.fileobj)
+                  elif key.data.master_connection:
+                      self.service_master_connection(key, mask)
                   else:
                       self.service_connection(key, mask)
       finally:
