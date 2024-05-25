@@ -22,7 +22,7 @@ class RedisServer:
       self.port = port
       self.server_socket = None
       self.master_server = master_server
-      self.master_port = master_port
+      self.master_port = int(master_port)
       self.encoder = Encoder()
       if master_server:
           self.server_type = ServerType.SLAVE
