@@ -41,7 +41,7 @@ class RedisServer:
                 master_connection=True,
             )
             self.master_connection = MasterConnection(
-                self.master_server, self.master_port
+                self.master_server, self.master_port, listening_port=self.port
             )
             sel.register(master_sock, events, data=data)
         self.debug = debug
@@ -217,10 +217,12 @@ class MasterConnection:
     state = MasterConnectionState.WAITING_FOR_PING
     server = None
     port = None
+    listening_port = None
 
-    def __init__(self, server, port):
+    def __init__(self, server, port, listening_port):
         self.server = server
         self.port = port
+        self.listening_port = listening_port
         self.encoder = Encoder()
 
     def service_connection(self, key, mask):
