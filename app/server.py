@@ -53,7 +53,7 @@ class RedisServer:
       return self._construct_line(message).encode()
   
   def encode_commands(self, messages):
-      return "".join([self._construct_line(message) for message in messages])
+      return "".join([self._construct_line(message) for message in messages]).encode()
 
   def get_null_message(self):
       return b"$-1\r\n"
