@@ -115,8 +115,9 @@ def initialize_server(port=6379):
 
 def handle_server(server_socket, master_server=None, master_port=None):
     print("Master server", master_server, master_port)
-    global master_details
-    master_details = { "server": master_server, "port": master_port }
+    if master_server:
+        global master_details
+        master_details = { "server": master_server, "port": master_port }
     try:
         while True:
             events = sel.select(timeout=None)
