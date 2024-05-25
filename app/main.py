@@ -113,7 +113,7 @@ def initialize_server(port=6379):
     sel.register(server_socket, selectors.EVENT_READ, data=None)
     return server_socket
 
-def handle_server(server_socket, master_server, master_port):
+def handle_server(server_socket, master_server=None, master_port=None):
     print("Master server", master_server, master_port)
     global master_details
     master_details = { "server": master_server, "port": master_port }
