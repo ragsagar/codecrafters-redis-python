@@ -5,6 +5,8 @@ import datetime
 
 from .server import RedisServer
 
+DEFAULT_PORT = 6379
+
 sel = selectors.DefaultSelector()
 
 master_details = None
@@ -150,7 +152,7 @@ def main():
     #     server_socket = initialize_server()
     # handle_server(server_socket, *replicate_server)
 
-    server = RedisServer(args.port, *replicate_server)
+    server = RedisServer(args.port or DEFAULT_PORT, *replicate_server)
     server.run()
 
 def run_test():
