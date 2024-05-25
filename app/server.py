@@ -145,7 +145,7 @@ class RedisServer:
           if data.outb:
               self.expire_data(data)
               incoming = self.parse_message(data.outb)
-              command = incoming[0].upper()
+              command = incoming[0].lower()
               handler_func = getattr(self, f'_handle_{command}_command')
               if not handler_func:
                   response_msg = self.encoder.generate_bulkstring("Unknown command")
