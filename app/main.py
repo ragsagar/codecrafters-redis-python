@@ -60,8 +60,6 @@ def service_connection(key, mask):
             print(f"Sending PONG to {data.addr}")
             sent = sock.sendall(b"+PONG\r\n")
             data.outb = data.outb[sent:]
-            sock.close()
-            sel.unregister(sock) 
 
 def initialize_server(port=6379):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
