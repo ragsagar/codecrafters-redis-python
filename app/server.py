@@ -112,7 +112,7 @@ class RedisServer:
           f"master_replid:{self.get_replid()}",
           f"master_repl_offset:{self.get_repl_offset()}"
       ])
-    response_msg = self.encode_message("\n".join(messages))
+    response_msg = self.encode_command("\n".join(messages))
     self.log("Sending replication info", response_msg)
     return response_msg
 
