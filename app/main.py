@@ -89,10 +89,10 @@ def service_connection(key, mask):
                 response_msg = handle_set_command(data, incoming)
                 sock.sendall(response_msg)
             elif command == 'INFO':
-                if incoming[1].upper() == "replication":
+                if incoming[1].upper() == "REPLICATION":
                     response_msg = encode_command("role:master")
                 else:
-                    response_msg = get_null_message()
+                    response_msg = encode_command("redis_version:0.0.1")
                 sock.sendall(response_msg)
             data.outb = b''
 
