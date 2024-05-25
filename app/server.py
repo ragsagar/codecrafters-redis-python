@@ -17,12 +17,13 @@ class RedisServer:
   master_port = None
   debug = True
   server_type = ServerType.MASTER
+  master_connection = None
   
   def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
       self.port = port
       self.server_socket = None
       self.master_server = master_server
-      self.master_port = int(master_port)
+      self.master_port = int(master_port) if master_port else None
       self.encoder = Encoder()
       if master_server:
           self.server_type = ServerType.SLAVE
@@ -30,6 +31,7 @@ class RedisServer:
           master_connection.connect((self.master_server, self.master_port))
           master_connection.setblocking(False)
           master_connection.sendall(self.encoder.generate_array_string(["PING"]))
+          self.master_connection = master_connection
           master_connection.close()
       self.debug = debug
 
