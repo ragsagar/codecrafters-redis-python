@@ -40,7 +40,9 @@ class RedisServer:
                 map_store={},
                 master_connection=True,
             )
-            self.master_connection = MasterConnection()
+            self.master_connection = MasterConnection(
+                self.master_server, self.master_port
+            )
             sel.register(master_sock, events, data=data)
         self.debug = debug
 
@@ -213,8 +215,12 @@ class MasterConnectionState(Enum):
 
 class MasterConnection:
     state = MasterConnectionState.WAITING_FOR_PING
+    server = None
+    port = None
 
-    def __init__(self):
+    def __init__(self, server, port):
+        self.server = server
+        self.port = port
         self.encoder = Encoder()
 
     def service_connection(self, key, mask):
