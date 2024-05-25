@@ -24,27 +24,30 @@ class RedisServer:
     def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
         self.port = port
         self.server_socket = None
+        self.encoder = Encoder()
         self.master_server = master_server
         self.master_port = int(master_port) if master_port else None
-        self.encoder = Encoder()
         if master_server:
-            self.server_type = ServerType.SLAVE
-            master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            master_sock.connect_ex((self.master_server, self.master_port))
-            master_sock.setblocking(False)
-            events = selectors.EVENT_READ | selectors.EVENT_WRITE
-            data = types.SimpleNamespace(
-                addr=("master conn",),
-                inb=b"",
-                outb=b"",
-                map_store={},
-                master_connection=True,
-            )
-            self.master_connection = MasterConnection(
-                self.master_server, self.master_port, listening_port=self.port
-            )
-            sel.register(master_sock, events, data=data)
+            self.setup_as_slave()
         self.debug = debug
+
+    def setup_as_slave(self):
+        self.server_type = ServerType.SLAVE
+        master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        master_sock.connect_ex((self.master_server, self.master_port))
+        master_sock.setblocking(False)
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        data = types.SimpleNamespace(
+            addr=("master conn",),
+            inb=b"",
+            outb=b"",
+            map_store={},
+            master_connection=True,
+        )
+        self.master_connection = MasterConnection(
+            self.master_server, self.master_port, listening_port=self.port
+        )
+        sel.register(master_sock, events, data=data)
 
     def get_server_type(self):
         return self.server_type
