@@ -31,6 +31,8 @@ class RedisServer:
           master_connection.connect((self.master_server, self.master_port))
           master_connection.setblocking(False)
           master_connection.sendall(self.encoder.generate_array_string(["PING"]))
+          master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)]))
+          master_connection.sendall(self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"]))
           self.master_connection = master_connection
           master_connection.close()
       self.debug = debug
