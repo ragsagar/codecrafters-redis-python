@@ -54,6 +54,9 @@ class RedisServer:
   
   def encode_commands(self, messages):
       return "".join([self._construct_line(message) for message in messages]).encode()
+  
+  def encode_array(self, messages):
+      return f"*{len(messages)}\r\n{''.join([self._construct_line(message) for message in messages])}".encode()
 
   def get_null_message(self):
       return b"$-1\r\n"
@@ -109,7 +112,7 @@ class RedisServer:
             f"master_replid:{self.get_replid()}",
             f"master_repl_offset:{self.get_repl_offset()}"
         ])
-        response_msg = self.encode_commands(messages)
+        response_msg = self.encode_array(messages)
     self.log("Sending replication info", response_msg)
     return response_msg
 
