@@ -174,10 +174,12 @@ class RedisServer:
           if recv_data:
               data.outb += recv_data
               self.log("Received", repr(recv_data), "from", data.addr)
-          else:
-              self.log("Closing connection to", data.addr)
-              sel.unregister(sock)
-              sock.close()
+          # else:
+          #     self.log("Closing connection to", data.addr)
+          #     sel.unregister(sock)
+          #     sock.close()
+          response_msg = self.encoder.generate_array_string(["PING"]);
+          sock.sendall(response_msg)
       if mask & selectors.EVENT_WRITE:
           if data.outb:
               incoming = self.parse_message(data.outb)
