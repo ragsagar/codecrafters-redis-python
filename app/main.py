@@ -24,6 +24,7 @@ def get_success_message():
 
 def expire_data(data):
     current_time = time.time()
+    print(f"Expiring data at time {current_time}, {data.addr}")
     for key, obj in data.map_store.items():
         if obj["expiry_time"] is not None and obj["expiry_time"] < current_time:
             del data.map_store[key]
