@@ -157,7 +157,7 @@ class RedisServer:
 
     def _handle_psync_command(self, data, incoming):
         print(f"Received psync command", incoming)
-        message = f"+FULLRESYNC {self.get_replid()} {self.get_repl_offset()}\r\n"
+        message = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}\r\n"
         return self.encoder.generate_simple_string(message)
 
     def initialize_server(self):
