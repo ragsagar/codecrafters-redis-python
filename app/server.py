@@ -55,7 +55,7 @@ class RedisServer:
     def setup_as_master(self):
         self.server_type = ServerType.MASTER
         self.repl_id = generate_repl_id()
-        self.repl_offset = -1
+        self.repl_offset = 0
         self.replicas = []
 
     def get_server_type(self):
