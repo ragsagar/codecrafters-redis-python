@@ -21,4 +21,4 @@ class Encoder:
         return f"+{message}\r\n".encode()
 
     def generate_file_string(self, contents):
-        return f"{len(contents)}\r\n{contents}".encode()
+        return f"${len(contents)}\r\n{contents}".encode()
