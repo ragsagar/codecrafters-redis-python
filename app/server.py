@@ -29,6 +29,8 @@ class RedisServer:
         self.master_port = int(master_port) if master_port else None
         if master_server:
             self.setup_as_slave()
+        else:
+            self.setup_as_master()
         self.debug = debug
 
     def setup_as_slave(self):
@@ -48,6 +50,10 @@ class RedisServer:
             self.master_server, self.master_port, listening_port=self.port
         )
         sel.register(master_sock, events, data=data)
+
+    def setup_as_master(self):
+        self.server_type = ServerType.MASTER
+        self.replicas = []
 
     def get_server_type(self):
         return self.server_type
@@ -78,17 +84,6 @@ class RedisServer:
             if obj["expiry_time"] is not None and obj["expiry_time"] < current_time:
                 self.log(f"Expiring key {key}")
                 del data.map_store[key]
-
-    def accept_wrapper(self, server_socket):
-        client_socket, addr = server_socket.accept()
-        self.log(f"Accepted connection from {addr}")
-        client_socket.setblocking(False)
-        data = types.SimpleNamespace(
-            addr=addr, inb=b"", outb=b"", map_store={}, master_connection=False
-        )
-        sel.register(
-            client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data
-        )
 
     def handle_set_command(self, data, incoming):
         key = incoming[1]
@@ -153,6 +148,45 @@ class RedisServer:
     def _handle_ping_command(self, data, incoming):
         return self.encoder.generate_bulkstring("PONG")
 
+    def _handle_replconf_command(self, data, incoming):
+        print("Received replconf command", incoming)
+        return self.encoder.generate_success_string()
+
+    def initialize_server(self):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.bind(("localhost", self.port))
+        self.server_socket.listen()
+        self.log(f"Listening on port {self.port}")
+        self.server_socket.setblocking(False)
+        sel.register(self.server_socket, selectors.EVENT_READ, data=None)
+
+    def handle_loop(self):
+        try:
+            while True:
+                events = sel.select(timeout=None)
+                for key, mask in events:
+                    if key.data is None:
+                        self.accept_wrapper(key.fileobj)
+                    elif key.data.master_connection:
+                        self.master_connection.service_connection(key, mask)
+                    else:
+                        self.service_connection(key, mask)
+        finally:
+            sel.close()
+            self.server_socket.close()
+
+    def accept_wrapper(self, server_socket):
+        client_socket, addr = server_socket.accept()
+        self.log(f"Accepted connection from {addr}")
+        client_socket.setblocking(False)
+        data = types.SimpleNamespace(
+            addr=addr, inb=b"", outb=b"", map_store={}, master_connection=False
+        )
+        sel.register(
+            client_socket, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data
+        )
+
     def service_connection(self, key, mask):
         sock = key.fileobj
         data = key.data
@@ -178,33 +212,9 @@ class RedisServer:
                 sock.sendall(response_msg)
                 data.outb = b""
 
-    def initialize_server(self):
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(("localhost", self.port))
-        self.server_socket.listen()
-        self.log(f"Listening on port {self.port}")
-        self.server_socket.setblocking(False)
-        sel.register(self.server_socket, selectors.EVENT_READ, data=None)
-
-    def handle_server(self):
-        try:
-            while True:
-                events = sel.select(timeout=None)
-                for key, mask in events:
-                    if key.data is None:
-                        self.accept_wrapper(key.fileobj)
-                    elif key.data.master_connection:
-                        self.master_connection.service_connection(key, mask)
-                    else:
-                        self.service_connection(key, mask)
-        finally:
-            sel.close()
-            self.server_socket.close()
-
     def run(self):
         self.initialize_server()
-        self.handle_server()
+        self.handle_loop()
 
 
 class MasterConnectionState(Enum):
@@ -245,10 +255,10 @@ class MasterConnection:
             if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
                 if data.outb:
                     incoming = self.parse_message(data.outb)
+                    self.log(f"Received message from master {incoming}")
                     if incoming.startswith("+FULLRESYNC"):
                         self.replica_id, self.offset = incoming.split(" ")[1:]
                         self.log(f"Replica id {self.replica_id} offset {self.offset}")
-                    self.log(f"Received message from master {incoming}")
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
                     print("Sending ping to master")
                     sock.sendall(self.encoder.generate_array_string(["PING"]))
@@ -270,7 +280,7 @@ class MasterConnection:
                     )
                     self.state = MasterConnectionState.WAITING_FOR_PSYNC
                 elif self.state == MasterConnectionState.WAITING_FOR_PSYNC:
-                    print("Sending capa to master")
+                    print("Sending replica id and offset to master")
                     sock.sendall(
                         self.encoder.generate_array_string(
                             ["PSYNC", self.replica_id, str(self.offset)]
@@ -280,11 +290,6 @@ class MasterConnection:
                     print("Master connection ready")
 
                 data.outb = b""
-            # if data.outb:
-            #     incoming = self.parse_message_from_master(data.outb)
-            #     self.log(f"Received message from master {incoming}")
-            #     response_msg = self.encoder.generate_array_string(["REPLCONF", "listening-port", str(self.port)])
-            #     sock.sendall(response_msg)
 
     def log(self, message, *args):
         print(message, *args)
