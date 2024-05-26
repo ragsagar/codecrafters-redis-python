@@ -234,7 +234,7 @@ class RedisServer:
                     self.sendall(response_msg, sock)
                 data.outb = b""
 
-    def sendall(self, sock, message):
+    def sendall(self, message, sock):
         print(f"Sending message {message}")
         sock.sendall(message)
 
