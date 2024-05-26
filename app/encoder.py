@@ -29,4 +29,4 @@ class Encoder:
         )
         byte_contents = bytes.fromhex(hex_contents)
         print("File contents", hex_contents)
-        return f"${len(byte_contents)}\r\n{result_string}".encode()
+        return f"${len(byte_contents)}\r\n".encode() + byte_contents
