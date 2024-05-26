@@ -157,7 +157,7 @@ class RedisServer:
 
     def handle_psync_command(self, data, incoming, sock):
         print(f"Received psync command", incoming)
-        message = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}\r\n"
+        message = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
         # sock.sendall(self.encoder.generate_simple_string(message))
         self.sendall(self.encoder.generate_simple_string(message), sock)
         file_message = self.encoder.generate_file_string(self.get_rdb_file_contents())
