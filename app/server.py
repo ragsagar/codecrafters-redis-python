@@ -164,6 +164,13 @@ class RedisServer:
         # sock.sendall(file_message)
         self.sendall(file_message, sock)
 
+    def _handle_psync_command(self, data, incoming):
+        print(f"Received psync command", incoming)
+        message = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
+        full_resync_message = self.encoder.generate_simple_string(message)
+        file_message = self.encoder.generate_file_string(self.get_rdb_file_contents())
+        return full_resync_message + file_message
+
     def get_rdb_file_contents(self):
         # hex_data = open("./sample_file.rdb").read()
         hex_data = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2"
@@ -221,17 +228,23 @@ class RedisServer:
                 self.expire_data(data)
                 incoming = self.parse_message(data.outb)
                 command = incoming[0].lower()
-                if command == "psync":
-                    self.handle_psync_command(data, incoming, sock)
+                # if command == "psync":
+                #     self.handle_psync_command(data, incoming, sock)
+                # else:
+                #     handler_func = getattr(self, f"_handle_{command}_command")
+                #     if not handler_func:
+                #         response_msg = self.encoder.generate_bulkstring(
+                #             "Unknown command"
+                #         )
+                #     else:
+                #         response_msg = handler_func(data, incoming)
+                #     self.sendall(response_msg, sock)
+                handler_func = getattr(self, f"_handle_{command}_command")
+                if not handler_func:
+                    response_msg = self.encoder.generate_bulkstring("Unknown command")
                 else:
-                    handler_func = getattr(self, f"_handle_{command}_command")
-                    if not handler_func:
-                        response_msg = self.encoder.generate_bulkstring(
-                            "Unknown command"
-                        )
-                    else:
-                        response_msg = handler_func(data, incoming)
-                    self.sendall(response_msg, sock)
+                    response_msg = handler_func(data, incoming)
+                self.sendall(response_msg, sock)
                 data.outb = b""
 
     def sendall(self, message, sock):
