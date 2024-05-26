@@ -162,7 +162,7 @@ class RedisServer:
         return self.encoder.generate_simple_string(message + file_message)
 
     def get_rdb_file_contents(self):
-        hex_data = open("sample_file.rdb").read()
+        hex_data = open("./sample_file.rdb").read()
         return bytes.fromhex(hex_data)
 
     def initialize_server(self):
