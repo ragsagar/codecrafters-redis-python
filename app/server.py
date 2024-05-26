@@ -5,6 +5,7 @@ import datetime
 import uuid
 from enum import Enum
 from .encoder import Encoder
+from .utils import generate_repl_id
 
 sel = selectors.DefaultSelector()
 
@@ -53,6 +54,8 @@ class RedisServer:
 
     def setup_as_master(self):
         self.server_type = ServerType.MASTER
+        self.repl_id = generate_repl_id()
+        self.repl_offset = -1
         self.replicas = []
 
     def get_server_type(self):
@@ -63,10 +66,10 @@ class RedisServer:
             print(message, *args)
 
     def get_repl_offset(self):
-        return 0
+        return self.repl_offset
 
     def get_replid(self):
-        return uuid.uuid4().hex
+        return self.repl_id
 
     def parse_message(self, message):
         parts = message.strip().split(b"\r\n")
@@ -151,6 +154,11 @@ class RedisServer:
     def _handle_replconf_command(self, data, incoming):
         print("Received replconf command", incoming)
         return self.encoder.generate_success_string()
+
+    def _handle_psync_command(self, data, incoming):
+        print(f"Received psync command", incoming)
+        message = f"+FULLRESYNC {self.get_replid()} {self.get_repl_offset()}\r\n"
+        return self.encoder.generate_simple_string(message)
 
     def initialize_server(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

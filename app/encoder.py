@@ -15,4 +15,7 @@ class Encoder:
         return b"$-1\r\n"
 
     def generate_success_string(self):
-        return b"+OK\r\n"
+        return self.generate_simple_string("OK")
+
+    def generate_simple_string(self, message):
+        return f"+{message}\r\n".encode()
