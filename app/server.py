@@ -231,7 +231,7 @@ class RedisServer:
                         )
                     else:
                         response_msg = handler_func(data, incoming)
-                    self.sendall(response_msg)
+                    self.sendall(response_msg, sock)
                 data.outb = b""
 
     def sendall(self, sock, message):
