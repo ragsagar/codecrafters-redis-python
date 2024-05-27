@@ -338,7 +338,7 @@ class MasterConnection:
                         raise Exception(
                             "Unexpected state, expected fullresync", incoming
                         )
-                elif self.state == MasterConnectionState.WAITING_FOR_FILE:
+                elif data.outb and self.state == MasterConnectionState.WAITING_FOR_FILE:
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received rdb file from master {incoming}")
                     self.log("Received incoming", incoming)
