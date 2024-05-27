@@ -352,7 +352,7 @@ class MasterConnection:
             data.outb = b""
 
     def log(self, message, *args):
-        print(message, *args)
+        print("Replica: ", message, *args)
 
     def parse_message(self, message):
         parts = message.strip().split(b"\r\n")
