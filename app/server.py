@@ -88,7 +88,7 @@ class RedisServer:
                 self.log(f"Expiring key {key}")
                 del data.map_store[key]
 
-    def handle_set_command(self, data, incoming):
+    def handle_set_command(self, data, incoming, sock):
         key = incoming[1]
         value = incoming[2]
         expiry_time = None
@@ -104,7 +104,7 @@ class RedisServer:
         data.outb = b""
         return self.encoder.generate_success_string()
 
-    def handle_get_command(self, data, incoming):
+    def handle_get_command(self, data, incoming, sock):
         key = incoming[1]
         if key in data.map_store:
             response_msg = self.encoder.generate_bulkstring(
@@ -114,7 +114,7 @@ class RedisServer:
             response_msg = self.encoder.generate_null_string()
         return response_msg
 
-    def handle_replication_command(self, data, incoming):
+    def handle_replication_command(self, data, incoming, sock):
         server_type = self.get_server_type()
         messages = [
             f"role:{server_type.value}",
@@ -130,28 +130,28 @@ class RedisServer:
         self.log("Sending replication info", response_msg)
         return response_msg
 
-    def _handle_get_command(self, data, incoming):
+    def _handle_get_command(self, data, incoming, sock):
         return self.handle_get_command(data, incoming)
 
-    def _handle_info_command(self, data, incoming):
+    def _handle_info_command(self, data, incoming, sock):
         if incoming[1].upper() == "REPLICATION":
             response_msg = self.handle_replication_command(data, incoming)
         else:
             response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
         return response_msg
 
-    def _handle_set_command(self, data, incoming):
+    def _handle_set_command(self, data, incoming, sock):
         return self.handle_set_command(data, incoming)
 
-    def _handle_echo_command(self, data, incoming):
+    def _handle_echo_command(self, data, incoming, sock):
         echo_message = incoming[1]
         response_msg = self.encoder.generate_bulkstring(echo_message)
         return response_msg
 
-    def _handle_ping_command(self, data, incoming):
+    def _handle_ping_command(self, data, incoming, sock):
         return self.encoder.generate_bulkstring("PONG")
 
-    def _handle_replconf_command(self, data, incoming):
+    def _handle_replconf_command(self, data, incoming, sock):
         print("Received replconf command", incoming)
         return self.encoder.generate_success_string()
 
@@ -160,7 +160,14 @@ class RedisServer:
         resync_string = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
         resync_message = self.encoder.generate_simple_string(resync_string)
         file_message = self.encoder.generate_file_string(self.get_rdb_file_contents())
+        self.add_replica(data.addr, incoming[1], incoming[2])
         return resync_message + file_message
+
+    def add_replica(self, addr, replica_id, offset, sock):
+        self.replicas.append((addr, replica_id, offset, sock))
+
+    def is_write_command(self, command):
+        return command in ["set", "del"]
 
     def get_rdb_file_contents(self):
         # hex_data = open("./sample_file.rdb").read()
@@ -223,7 +230,11 @@ class RedisServer:
                 if not handler_func:
                     response_msg = self.encoder.generate_bulkstring("Unknown command")
                 else:
-                    response_msg = handler_func(data, incoming)
+                    response_msg = handler_func(data, incoming, sock)
+                if self.is_write_command(command):
+                    for replica in self.replicas:
+                        connection = replica[3]
+                        self.sendall(incoming, connection)
                 self.sendall(response_msg, sock)
                 data.outb = b""
 
