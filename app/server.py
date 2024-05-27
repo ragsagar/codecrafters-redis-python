@@ -263,11 +263,11 @@ class MasterConnection:
     replica_id = "?"
     offset = -1
 
-    def __init__(self, server, port, socket, listening_port):
+    def __init__(self, server, port, socket, command_handler):
         self.server = server
         self.port = port
         self.socket = socket
-        self.listening_port = listening_port
+        self.command_handler = command_handler
         self.encoder = Encoder()
 
     def service_connection(self, key, mask):
@@ -320,7 +320,11 @@ class MasterConnection:
                     self.state = MasterConnectionState.READY
                     print("Master connection ready")
 
-                data.outb = b""
+            elif data.outb and self.state == MasterConnectionState.READY:
+                self.server.expire_data(data)
+                self.command_handler.handle_command(data, sock)
+                sock.sendall(self.encoder.generate_success_string())
+            data.outb = b""
 
     def log(self, message, *args):
         print(message, *args)
