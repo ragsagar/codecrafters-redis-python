@@ -50,7 +50,7 @@ class RedisServer:
             master_connection=True,
         )
         self.master_connection = MasterConnection(
-            self.master_server, self.master_port, master_sock, listening_port=self.port
+            self.master_server, self.master_port, master_sock, self.command_handler
         )
         sel.register(master_sock, events, data=data)
 
