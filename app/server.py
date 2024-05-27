@@ -234,7 +234,7 @@ class RedisServer:
                 if self.is_write_command(command):
                     for replica in self.replicas:
                         connection = replica[3]
-                        self.sendall(incoming, connection)
+                        self.sendall(data.outb, connection)
                 self.sendall(response_msg, sock)
                 data.outb = b""
 
