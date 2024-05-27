@@ -101,7 +101,6 @@ class RedisServer:
                 )
         self.log(f"Setting key {key} to value {value} with expiry time {expiry_time}")
         data.map_store[key] = {"value": value, "expiry_time": expiry_time}
-        data.outb = b""
         return self.encoder.generate_success_string()
 
     def handle_get_command(self, data, incoming, sock):
@@ -141,7 +140,7 @@ class RedisServer:
         return response_msg
 
     def _handle_set_command(self, data, incoming, sock):
-        return self.handle_set_command(data, incoming)
+        return self.handle_set_command(data, incoming, sock)
 
     def _handle_echo_command(self, data, incoming, sock):
         echo_message = incoming[1]

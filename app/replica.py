@@ -8,14 +8,19 @@ class ReplicaState(Enum):
     WAITING_FOR_CAPA = "waiting_for_capa"
 
 
-class ReplicaConnection:
+class Replica:
     state = ReplicaState.WAITING_FOR_PING
 
-    def __init__(self, socket, server, port):
+    def __init__(self, addr, socket, offset, replica_id):
+        self.addr = addr
         self.socket = socket
-        self.server = server
-        self.port = port
+        self.offset = offset
+        self.replid = replica_id
         self.encoder = Encoder()
+
+    def send_message(self, message):
+        print(f"Sending message to {self.addr}", message)
+        self.socket.sendall(message)
 
     def service_connection(self):
         pass
