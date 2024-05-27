@@ -88,9 +88,9 @@ class CommandHandler:
         parts = message.strip().split(b"\r\n")
         print("Parsing message", message, "parts", parts)
         commands = []
-        if parts[0] == b"+":
+        if parts[0] == "+":
             return [parts[1:].decode()]
-        elif parts[0] == b"$":
+        elif parts[0] == "$":
             length = int(parts[0][1:])
             for i in range(length):
                 commands.append(parts[i * 2 + 2].decode())
