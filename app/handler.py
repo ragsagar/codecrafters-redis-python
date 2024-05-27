@@ -85,8 +85,8 @@ class CommandHandler:
         return None
 
     def parse_message(self, message):
-        print("Parsing message", message)
         parts = message.strip().split(b"\r\n")
+        print("Parsing message", message, "parts", parts)
         commands = []
         if parts[0] == b"+":
             return [parts[1:].decode()]
