@@ -90,7 +90,7 @@ class CommandHandler:
         commands = []
         if len(parts) == 1:
             return [parts[0].decode()]
-        elif parts[0] == "$":
+        else:
             length = int(parts[0][1:])
             for i in range(length):
                 commands.append(parts[i * 2 + 2].decode())
