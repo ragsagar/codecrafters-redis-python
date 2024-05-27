@@ -322,7 +322,7 @@ class MasterConnection:
                         )
                     )
                     self.state = MasterConnectionState.WAITING_FOR_FULLRESYNC
-                    print("Replica waiting for fullresync from master")
+                    self.log("Waiting for fullresync from master")
                 elif (
                     data.outb
                     and self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC
@@ -333,7 +333,7 @@ class MasterConnection:
                         self.replica_id, self.offset = incoming.split(" ")[1:]
                         self.log(f"Replica id {self.replica_id} offset {self.offset}")
                         self.state = MasterConnectionState.READY
-                        print("Replica waiting for file")
+                        self.log("waiting for file")
                     else:
                         raise Exception(
                             "Unexpected state, expected fullresync", incoming
@@ -341,11 +341,12 @@ class MasterConnection:
                 elif self.state == MasterConnectionState.WAITING_FOR_FILE:
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received rdb file from master {incoming}")
-                    print("Received incoming", incoming)
+                    self.log("Received incoming", incoming)
                     self.state = MasterConnectionState.READY
 
             if data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
+                self.log("Expired data")
                 response = self.command_handler.handle_command(data, sock)
                 if not response:
                     sock.sendall(self.encoder.generate_success_string())
