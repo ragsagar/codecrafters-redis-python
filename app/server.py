@@ -7,16 +7,16 @@ from enum import Enum
 from .encoder import Encoder
 from .utils import generate_repl_id
 from .replica import Replica
+from .handler import CommandHandler
 
 sel = selectors.DefaultSelector()
 
 
-class ServerType(Enum):
-    MASTER = "master"
-    SLAVE = "slave"
-
-
 class RedisServer:
+    class ServerType(Enum):
+        MASTER = "master"
+        SLAVE = "slave"
+
     master_server = None
     master_port = None
     debug = True
@@ -29,6 +29,7 @@ class RedisServer:
         self.encoder = Encoder()
         self.master_server = master_server
         self.master_port = int(master_port) if master_port else None
+        self.command_handler = CommandHandler(self)
         if master_server:
             self.setup_as_slave()
         else:
@@ -36,7 +37,7 @@ class RedisServer:
         self.debug = debug
 
     def setup_as_slave(self):
-        self.server_type = ServerType.SLAVE
+        self.server_type = self.ServerType.SLAVE
         master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         master_sock.connect_ex((self.master_server, self.master_port))
         master_sock.setblocking(False)
@@ -49,12 +50,12 @@ class RedisServer:
             master_connection=True,
         )
         self.master_connection = MasterConnection(
-            self.master_server, self.master_port, listening_port=self.port
+            self.master_server, self.master_port, master_sock, listening_port=self.port
         )
         sel.register(master_sock, events, data=data)
 
     def setup_as_master(self):
-        self.server_type = ServerType.MASTER
+        self.server_type = self.ServerType.MASTER
         self.repl_id = generate_repl_id()
         self.repl_offset = 0
         self.replicas = []
@@ -119,7 +120,7 @@ class RedisServer:
         messages = [
             f"role:{server_type.value}",
         ]
-        if server_type == ServerType.MASTER:
+        if server_type == self.ServerType.MASTER:
             messages.extend(
                 [
                     f"master_replid:{self.get_replid()}",
@@ -222,11 +223,12 @@ class RedisServer:
                 self.expire_data(data)
                 incoming = self.parse_message(data.outb)
                 command = incoming[0].lower()
-                handler_func = getattr(self, f"_handle_{command}_command")
-                if not handler_func:
-                    response_msg = self.encoder.generate_bulkstring("Unknown command")
-                else:
-                    response_msg = handler_func(data, incoming, sock)
+                # handler_func = getattr(self, f"_handle_{command}_command")
+                # if not handler_func:
+                #     response_msg = self.encoder.generate_bulkstring("Unknown command")
+                # else:
+                #     response_msg = handler_func(data, incoming, sock)
+                response_msg = self.command_handler.handle_command(data, sock)
                 self.replicate_if_required(data, command)
                 self.sendall(response_msg, sock)
                 data.outb = b""
@@ -261,9 +263,10 @@ class MasterConnection:
     replica_id = "?"
     offset = -1
 
-    def __init__(self, server, port, listening_port):
+    def __init__(self, server, port, socket, listening_port):
         self.server = server
         self.port = port
+        self.socket = socket
         self.listening_port = listening_port
         self.encoder = Encoder()
 
