@@ -50,7 +50,7 @@ class RedisServer:
             master_connection=True,
         )
         self.master_connection = MasterConnection(
-            self.port, master_sock, self.command_handler
+            self, self.port, master_sock, self.command_handler
         )
         sel.register(master_sock, events, data=data)
 
@@ -263,7 +263,8 @@ class MasterConnection:
     replica_id = "?"
     offset = -1
 
-    def __init__(self, listening_port, socket, command_handler):
+    def __init__(self, server, listening_port, socket, command_handler):
+        self.server = server
         self.listening_port = listening_port
         self.socket = socket
         self.command_handler = command_handler
