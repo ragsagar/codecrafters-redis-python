@@ -19,7 +19,7 @@ class Replica:
         self.encoder = Encoder()
 
     def send_message(self, message):
-        print(f"Sending message to {self.addr}", message)
+        print(f"Syncing with replica {self.addr}", message)
         self.socket.sendall(message)
 
     def service_connection(self):
