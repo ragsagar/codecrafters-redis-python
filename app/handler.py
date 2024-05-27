@@ -98,6 +98,7 @@ class CommandHandler:
 
     def handle_command(self, data, socket):
         incoming = self.parse_message(data.outb)
+        print("Incoming data", incoming)
         if (len(incoming) == 1 and incoming[0] == "OK") or not incoming:
             return None
         print("Incoming", incoming)
