@@ -252,6 +252,8 @@ class MasterConnectionState(Enum):
     WAITING_FOR_PORT = "waiting_for_port"
     WAITING_FOR_CAPA = "waiting_for_capa"
     WAITING_FOR_PSYNC = "waiting_for_psync"
+    WAITING_FOR_FULLRESYNC = "waiting_for_fullresync"
+    WAITING_FOR_FILE = "waiting_for_file"
     READY = "ready"
 
 
@@ -283,7 +285,7 @@ class MasterConnection:
                 sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
-            if data.outb or self.state == MasterConnectionState.WAITING_FOR_PING:
+            if data.outb and self.state != MasterConnectionState.READY:
                 if data.outb:
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received message from master {incoming}")
@@ -317,8 +319,23 @@ class MasterConnection:
                             ["PSYNC", self.replica_id, str(self.offset)]
                         )
                     )
+                    self.state = MasterConnectionState.WAITING_FOR_FULLRESYNC
+                    print("Replica waiting for fullresync from master")
+                elif self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC:
+                    incoming = self.parse_message(data.outb)
+                    self.log(f"Received message from master {incoming}")
+                    if incoming.startswith("+FULLRESYNC"):
+                        self.replica_id, self.offset = incoming.split(" ")[1:]
+                        self.log(f"Replica id {self.replica_id} offset {self.offset}")
+                        self.state = MasterConnectionState.READY
+                        print("Replica waiting for file")
+                    else:
+                        raise Exception("Invalid state", incoming)
+                elif self.state == MasterConnectionState.WAITING_FOR_FILE:
+                    incoming = self.parse_message(data.outb)
+                    self.log(f"Received rdb file from master {incoming}")
+                    print("Received incoming", incoming)
                     self.state = MasterConnectionState.READY
-                    print("Master connection ready")
 
             if data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
