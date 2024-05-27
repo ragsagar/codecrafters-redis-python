@@ -285,13 +285,13 @@ class MasterConnection:
                 sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
-            if data.outb and self.state != MasterConnectionState.READY:
-                if data.outb:
-                    incoming = self.parse_message(data.outb)
-                    self.log(f"Received message from master {incoming}")
-                    if incoming.startswith("+FULLRESYNC"):
-                        self.replica_id, self.offset = incoming.split(" ")[1:]
-                        self.log(f"Replica id {self.replica_id} offset {self.offset}")
+            if self.state != MasterConnectionState.READY:
+                # if data.outb:
+                #     incoming = self.parse_message(data.outb)
+                #     self.log(f"Received message from master {incoming}")
+                #     if incoming.startswith("+FULLRESYNC"):
+                #         self.replica_id, self.offset = incoming.split(" ")[1:]
+                #         self.log(f"Replica id {self.replica_id} offset {self.offset}")
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
                     print("Sending ping to master")
                     sock.sendall(self.encoder.generate_array_string(["PING"]))
