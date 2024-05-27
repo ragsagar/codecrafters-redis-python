@@ -157,13 +157,14 @@ class RedisServer:
 
     def _handle_psync_command(self, data, incoming):
         print(f"Received psync command", incoming)
+        self.add_replica(data.addr, incoming[1], incoming[2])
         resync_string = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
         resync_message = self.encoder.generate_simple_string(resync_string)
         file_message = self.encoder.generate_file_string(self.get_rdb_file_contents())
-        self.add_replica(data.addr, incoming[1], incoming[2])
         return resync_message + file_message
 
     def add_replica(self, addr, replica_id, offset, sock):
+        print(f"Adding replica {addr} {replica_id} at offset {offset}")
         self.replicas.append((addr, replica_id, offset, sock))
 
     def is_write_command(self, command):
