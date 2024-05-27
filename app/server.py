@@ -304,7 +304,7 @@ class MasterConnection:
                         )
                     )
                     self.state = MasterConnectionState.WAITING_FOR_CAPA
-                elif self.state == MasterConnectionState.WAITING_FOR_CAPA:
+                elif data.outb and self.state == MasterConnectionState.WAITING_FOR_CAPA:
                     print("Sending capa to master")
                     sock.sendall(
                         self.encoder.generate_array_string(
@@ -312,7 +312,9 @@ class MasterConnection:
                         )
                     )
                     self.state = MasterConnectionState.WAITING_FOR_PSYNC
-                elif self.state == MasterConnectionState.WAITING_FOR_PSYNC:
+                elif (
+                    data.outb and self.state == MasterConnectionState.WAITING_FOR_PSYNC
+                ):
                     print("Sending replica id and offset to master")
                     sock.sendall(
                         self.encoder.generate_array_string(
@@ -321,7 +323,10 @@ class MasterConnection:
                     )
                     self.state = MasterConnectionState.WAITING_FOR_FULLRESYNC
                     print("Replica waiting for fullresync from master")
-                elif self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC:
+                elif (
+                    data.outb
+                    and self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC
+                ):
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received message from master {incoming}")
                     if incoming.startswith("+FULLRESYNC"):
