@@ -322,8 +322,9 @@ class MasterConnection:
 
             if data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
-                self.command_handler.handle_command(data, sock)
-                sock.sendall(self.encoder.generate_success_string())
+                response = self.command_handler.handle_command(data, sock)
+                if not response:
+                    sock.sendall(self.encoder.generate_success_string())
             data.outb = b""
 
     def log(self, message, *args):
