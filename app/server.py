@@ -296,7 +296,7 @@ class MasterConnection:
                     print("Sending ping to master")
                     sock.sendall(self.encoder.generate_array_string(["PING"]))
                     self.state = MasterConnectionState.WAITING_FOR_PORT
-                elif self.state == MasterConnectionState.WAITING_FOR_PORT:
+                elif data.outb and self.state == MasterConnectionState.WAITING_FOR_PORT:
                     print("Sending port to master")
                     sock.sendall(
                         self.encoder.generate_array_string(
@@ -330,7 +330,9 @@ class MasterConnection:
                         self.state = MasterConnectionState.READY
                         print("Replica waiting for file")
                     else:
-                        raise Exception("Invalid state", incoming)
+                        raise Exception(
+                            "Unexpected state, expected fullresync", incoming
+                        )
                 elif self.state == MasterConnectionState.WAITING_FOR_FILE:
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received rdb file from master {incoming}")
