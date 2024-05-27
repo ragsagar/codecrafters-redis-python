@@ -101,7 +101,7 @@ class CommandHandler:
         if len(incoming) == 1 and incoming[0] == "OK":
             return None
         command = incoming[0].lower()
-        handler_func = getattr(self, f"_handle_{command}_command")
+        handler_func = getattr(self, f"_handle_{command}_command", None)
         if not handler_func:
             response_msg = self.server.encoder.generate_bulkstring("Unknown command")
         else:
