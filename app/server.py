@@ -320,7 +320,7 @@ class MasterConnection:
                     self.state = MasterConnectionState.READY
                     print("Master connection ready")
 
-            elif data.outb and self.state == MasterConnectionState.READY:
+            if data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
                 self.command_handler.handle_command(data, sock)
                 sock.sendall(self.encoder.generate_success_string())

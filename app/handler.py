@@ -70,7 +70,7 @@ class CommandHandler:
         return self.server.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, incoming, sock):
-        print(f"Received psync command", incoming)
+        print("Received psync command", incoming)
         self.server.add_replica(data.addr, incoming[1], incoming[2], sock)
         resync_string = (
             f"FULLRESYNC {self.server.get_replid()} {self.server.get_repl_offset()}"
