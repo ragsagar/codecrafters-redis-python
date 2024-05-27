@@ -89,6 +89,7 @@ class CommandHandler:
         print("Parsing message", message, "parts", parts)
         commands = []
         if parts[0] == b"+OK":
+            print("Recieved OK response")
             return None
         elif parts[0] == "$":
             length = int(parts[0][1:])
