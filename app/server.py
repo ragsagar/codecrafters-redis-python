@@ -88,7 +88,7 @@ class RedisServer:
                 self.log(f"Expiring key {key}")
                 del data.map_store[key]
 
-    def handle_set_command(self, data, incoming, sock):
+    def _handle_set_command(self, data, incoming, sock):
         key = incoming[1]
         value = incoming[2]
         expiry_time = None
@@ -103,7 +103,7 @@ class RedisServer:
         data.map_store[key] = {"value": value, "expiry_time": expiry_time}
         return self.encoder.generate_success_string()
 
-    def handle_get_command(self, data, incoming, sock):
+    def _handle_get_command(self, data, incoming, sock):
         key = incoming[1]
         if key in data.map_store:
             response_msg = self.encoder.generate_bulkstring(
@@ -129,18 +129,12 @@ class RedisServer:
         self.log("Sending replication info", response_msg)
         return response_msg
 
-    def _handle_get_command(self, data, incoming, sock):
-        return self.handle_get_command(data, incoming)
-
     def _handle_info_command(self, data, incoming, sock):
         if incoming[1].upper() == "REPLICATION":
-            response_msg = self.handle_replication_command(data, incoming)
+            response_msg = self.handle_replication_command(data, incoming, sock)
         else:
             response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
         return response_msg
-
-    def _handle_set_command(self, data, incoming, sock):
-        return self.handle_set_command(data, incoming, sock)
 
     def _handle_echo_command(self, data, incoming, sock):
         echo_message = incoming[1]
