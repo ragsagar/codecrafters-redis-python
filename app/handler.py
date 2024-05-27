@@ -70,7 +70,7 @@ class CommandHandler:
         return self.server.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, incoming, sock):
-        print("Received psync command", incoming)
+        print(f"Received psync command", incoming)
         self.server.add_replica(data.addr, incoming[1], incoming[2], sock)
         resync_string = (
             f"FULLRESYNC {self.server.get_replid()} {self.server.get_repl_offset()}"
@@ -81,8 +81,23 @@ class CommandHandler:
         )
         return resync_message + file_message
 
+    def _handle_ok_command(self, data, incoming, sock):
+        return None
+
+    def parse_message(self, message):
+        print("Parsing message", message)
+        parts = message.strip().split(b"\r\n")
+        commands = []
+        if parts[0] == b"+":
+            return [parts[1:].decode()]
+        elif parts[0] == b"$":
+            length = int(parts[0][1:])
+            for i in range(length):
+                commands.append(parts[i * 2 + 2].decode())
+        return commands
+
     def handle_command(self, data, socket):
-        incoming = self.server.parse_message(data.outb)
+        incoming = self.parse_message(data.outb)
         command = incoming[0].lower()
         handler_func = getattr(self, f"_handle_{command}_command")
         if not handler_func:
