@@ -234,8 +234,7 @@ class RedisServer:
     def replicate_if_required(self, data, command):
         if self.is_write_command(command):
             for replica in self.replicas:
-                connection = replica[3]
-                self.sendall(data.outb, connection)
+                replica.send_message(data.outb)
 
     def sendall(self, message, sock):
         print(f"Sending message {message}")
