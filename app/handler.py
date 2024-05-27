@@ -88,9 +88,8 @@ class CommandHandler:
         parts = message.strip().split(b"\r\n")
         print("Parsing message", message, "parts", parts)
         commands = []
-        if parts[0] == b"+OK":
-            print("Recieved OK response")
-            return None
+        if len(parts) == 1:
+            return [parts[0].decode()]
         elif parts[0] == "$":
             length = int(parts[0][1:])
             for i in range(length):
@@ -99,6 +98,8 @@ class CommandHandler:
 
     def handle_command(self, data, socket):
         incoming = self.parse_message(data.outb)
+        if len(incoming) == 1 and incoming[0] == "OK":
+            return None
         command = incoming[0].lower()
         handler_func = getattr(self, f"_handle_{command}_command")
         if not handler_func:
