@@ -155,7 +155,7 @@ class RedisServer:
         print("Received replconf command", incoming)
         return self.encoder.generate_success_string()
 
-    def _handle_psync_command(self, data, incoming):
+    def _handle_psync_command(self, data, incoming, sock):
         print(f"Received psync command", incoming)
         self.add_replica(data.addr, incoming[1], incoming[2])
         resync_string = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
