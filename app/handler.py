@@ -100,6 +100,7 @@ class CommandHandler:
         incoming = self.parse_message(data.outb)
         if len(incoming) == 1 and incoming[0] == "OK":
             return None
+        print("Incoming", incoming)
         command = incoming[0].lower()
         handler_func = getattr(self, f"_handle_{command}_command", None)
         if not handler_func:
