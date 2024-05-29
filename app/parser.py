@@ -29,7 +29,7 @@ class RespParser:
                     self.state = self.State.COMMAND
                 elif token.startswith(b"+"):
                     command = Command(token[1:].decode())
-                    self.state = self.State.DONE
+                    message_length = 0
             elif self.state == self.State.COMMAND:
                 message_length -= 1
                 command = Command(token.decode())
@@ -37,9 +37,7 @@ class RespParser:
             elif self.state == self.State.DATA:
                 message_length -= 1
                 command.add_data(token.decode())
-                if message_length == 0:
-                    self.state = self.State.DONE
-            if self.state == self.State.DONE or message_length == 0:
+            if message_length == 0:
                 commands.append(command)
                 self.state = self.State.START
                 message_length = 0
