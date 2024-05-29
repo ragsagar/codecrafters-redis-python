@@ -282,8 +282,8 @@ class MasterConnection:
                 self.server.expire_data(data)
                 self.log("Expired data")
                 response = self.command_handler.handle_message(data, sock)
-                if not response:
-                    sock.sendall(self.encoder.generate_success_string())
+                if response:
+                    sock.sendall(response)
             data.outb = b""
 
     def set_state(self, state):
