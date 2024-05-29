@@ -283,6 +283,7 @@ class MasterConnection:
                 self.log("Expired data")
                 response = self.command_handler.handle_message(data, sock)
                 if response:
+                    print("Sending", response)
                     sock.sendall(response)
             data.outb = b""
 
