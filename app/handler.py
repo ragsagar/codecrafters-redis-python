@@ -43,7 +43,7 @@ class CommandHandler:
         return response_msg
 
     def _handle_info_command(self, data, cmd, sock):
-        if incoming[1].upper() == "REPLICATION":
+        if cmd.data[0].upper() == "REPLICATION":
             response_msg = self.handle_replication_command(data, cmd, sock)
         else:
             response_msg = self.server.encoder.generate_bulkstring(
@@ -82,19 +82,19 @@ class CommandHandler:
         commands = self.parser.parse(message)
         return commands
 
-    def handle_single_command(self, data, command):
+    def handle_single_command(self, data, command, sock):
         handler_func = getattr(self, f"_handle_{command.command.lower()}_command", None)
         if not handler_func:
             response_msg = self.server.encoder.generate_bulkstring("Unknown command")
         else:
-            response_msg = handler_func(data, command)
+            response_msg = handler_func(data, command, sock)
         return response_msg
 
-    def handle_message(self, data):
+    def handle_message(self, data, sock):
         commands = self.parse_message(data.outb)
         response_msg = b""
         for command in commands:
-            response = self.handle_single_command(data, command)
+            response = self.handle_single_command(data, command, sock)
             if response:
                 response_msg += response
         return response_msg
