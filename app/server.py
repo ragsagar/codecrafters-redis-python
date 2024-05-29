@@ -8,6 +8,7 @@ from .encoder import Encoder
 from .utils import generate_repl_id
 from .replica import Replica
 from .handler import CommandHandler
+from .store import KeyValueStore
 
 sel = selectors.DefaultSelector()
 
@@ -22,6 +23,7 @@ class RedisServer:
     debug = True
     server_type = ServerType.MASTER
     master_connection = None
+    store = None
 
     def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
         self.port = port
@@ -30,6 +32,7 @@ class RedisServer:
         self.master_server = master_server
         self.master_port = int(master_port) if master_port else None
         self.command_handler = CommandHandler(self)
+        self.store = KeyValueStore()
         if master_server:
             self.setup_as_slave()
         else:
@@ -82,13 +85,10 @@ class RedisServer:
         return commands
 
     def expire_data(self, data):
-        current_time = datetime.datetime.now()
-        self.log(f"Expiring data at time {current_time}, {data.map_store}")
-        for key in list(data.map_store.keys()):
-            obj = data.map_store[key]
-            if obj["expiry_time"] is not None and obj["expiry_time"] < current_time:
-                self.log(f"Expiring key {key}")
-                del data.map_store[key]
+        self.store.expire_data()
+
+    def set_data(self, key, value, expiry_time=None):
+        self.store.set(key, value, expiry_time)
 
     def _handle_set_command(self, data, incoming, sock):
         key = incoming[1]

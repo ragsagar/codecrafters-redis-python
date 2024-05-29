@@ -8,18 +8,12 @@ class CommandHandler:
     def _handle_set_command(self, data, incoming, sock):
         key = incoming[1]
         value = incoming[2]
-        expiry_time = None
+        expiry_milliseconds = None
         if len(incoming) > 4:
             expiry_command = incoming[3]
             if expiry_command.upper() == "PX":
-                expiry_value = int(incoming[4])
-                expiry_time = datetime.datetime.now() + datetime.timedelta(
-                    milliseconds=expiry_value
-                )
-        self.server.log(
-            f"Setting key {key} to value {value} with expiry time {expiry_time}"
-        )
-        data.map_store[key] = {"value": value, "expiry_time": expiry_time}
+                expiry_milliseconds = int(incoming[4])
+        self.server.set_data(key, value, expiry_milliseconds)
         return self.server.encoder.generate_success_string()
 
     def _handle_get_command(self, data, incoming, sock):
