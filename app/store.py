@@ -22,7 +22,7 @@ class KeyValueStore:
     def expire_data(self):
         print("Expiring data in store", self.data)
         for key in list(self.data.keys()):
-            value = self.data[value]
+            value = self.data[key]
             if value["expiry_time"] and value["expiry_time"] < datetime.datetime.now():
                 del self.data[key]
 
