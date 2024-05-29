@@ -343,8 +343,7 @@ class MasterConnection:
                     self.log(f"Received rdb file from master {incoming}")
                     self.log("Received incoming", incoming)
                     self.state = MasterConnectionState.READY
-
-            if data.outb and self.state == MasterConnectionState.READY:
+            elif data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
                 self.log("Expired data")
                 response = self.command_handler.handle_command(data, sock)
