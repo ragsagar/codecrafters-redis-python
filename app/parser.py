@@ -12,10 +12,11 @@ class RespParser:
         self.state = self.State.START
 
     def parse(self, message):
-        parts = message.split(b"\r\n")
+        parts = message.strip().split(b"\r\n")
         message_length = 0
         command = None
         commands = []
+        print("parse", parts)
         for part in parts:
             if message_length < 0:
                 raise ValueError("Invalid message", parts)
@@ -36,10 +37,12 @@ class RespParser:
                 command = Command(part.decode())
                 self.state = self.State.DATA
             elif self.state == self.State.DATA:
-                message_length -= 1
-                command.add_data(part.decode())
-                if message_length == 1:
+                print("Collecting data", part, message_length)
+                if message_length <= 1:
                     self.state = self.State.DONE
+                else:
+                    message_length -= 1
+                    command.add_data(part.decode())
             elif self.state == self.State.DONE:
                 command.add_data(part.decode())
                 commands.append(command)
