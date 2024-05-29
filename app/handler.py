@@ -18,10 +18,9 @@ class CommandHandler:
 
     def _handle_get_command(self, data, incoming, sock):
         key = incoming[1]
-        if key in data.map_store:
-            response_msg = self.server.encoder.generate_bulkstring(
-                data.map_store[key]["value"]
-            )
+        value = self.server.get_data(key)
+        if value:
+            response_msg = self.server.encoder.generate_bulkstring(value)
         else:
             response_msg = self.server.encoder.generate_null_string()
         return response_msg

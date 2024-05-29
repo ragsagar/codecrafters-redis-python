@@ -87,76 +87,11 @@ class RedisServer:
     def expire_data(self, data):
         self.store.expire_data()
 
+    def get_data(self, key):
+        return self.store.get(key)
+
     def set_data(self, key, value, expiry_time=None):
         self.store.set(key, value, expiry_time)
-
-    def _handle_set_command(self, data, incoming, sock):
-        key = incoming[1]
-        value = incoming[2]
-        expiry_time = None
-        if len(incoming) > 4:
-            expiry_command = incoming[3]
-            if expiry_command.upper() == "PX":
-                expiry_value = int(incoming[4])
-                expiry_time = datetime.datetime.now() + datetime.timedelta(
-                    milliseconds=expiry_value
-                )
-        self.log(f"Setting key {key} to value {value} with expiry time {expiry_time}")
-        data.map_store[key] = {"value": value, "expiry_time": expiry_time}
-        return self.encoder.generate_success_string()
-
-    def _handle_get_command(self, data, incoming, sock):
-        key = incoming[1]
-        if key in data.map_store:
-            response_msg = self.encoder.generate_bulkstring(
-                data.map_store[key]["value"]
-            )
-        else:
-            response_msg = self.encoder.generate_null_string()
-        return response_msg
-
-    def handle_replication_command(self, data, incoming, sock):
-        server_type = self.get_server_type()
-        messages = [
-            f"role:{server_type.value}",
-        ]
-        if server_type == self.ServerType.MASTER:
-            messages.extend(
-                [
-                    f"master_replid:{self.get_replid()}",
-                    f"master_repl_offset:{self.get_repl_offset()}",
-                ]
-            )
-        response_msg = self.encoder.generate_bulkstring("\n".join(messages))
-        self.log("Sending replication info", response_msg)
-        return response_msg
-
-    def _handle_info_command(self, data, incoming, sock):
-        if incoming[1].upper() == "REPLICATION":
-            response_msg = self.handle_replication_command(data, incoming, sock)
-        else:
-            response_msg = self.encoder.generate_bulkstring("redis_version:0.0.1")
-        return response_msg
-
-    def _handle_echo_command(self, data, incoming, sock):
-        echo_message = incoming[1]
-        response_msg = self.encoder.generate_bulkstring(echo_message)
-        return response_msg
-
-    def _handle_ping_command(self, data, incoming, sock):
-        return self.encoder.generate_bulkstring("PONG")
-
-    def _handle_replconf_command(self, data, incoming, sock):
-        print("Received replconf command", incoming)
-        return self.encoder.generate_success_string()
-
-    def _handle_psync_command(self, data, incoming, sock):
-        print(f"Received psync command", incoming)
-        self.add_replica(data.addr, incoming[1], incoming[2], sock)
-        resync_string = f"FULLRESYNC {self.get_replid()} {self.get_repl_offset()}"
-        resync_message = self.encoder.generate_simple_string(resync_string)
-        file_message = self.encoder.generate_file_string(self.get_rdb_file_contents())
-        return resync_message + file_message
 
     def add_replica(self, addr, replica_id, offset, sock):
         print(f"Adding replica {addr} {replica_id} at offset {offset}")

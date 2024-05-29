@@ -24,3 +24,8 @@ class KeyValueStore:
         for key, value in self.data.items():
             if value["expiry_time"] and value["expiry_time"] < datetime.datetime.now():
                 del self.data[key]
+
+    def get(self, key):
+        if key not in self.data:
+            return None
+        return self.data[key]["value"]
