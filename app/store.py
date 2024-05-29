@@ -20,7 +20,7 @@ class KeyValueStore:
         }
 
     def expire_data(self):
-        print("Expiring data in store")
+        print("Expiring data in store", self.data)
         for key, value in self.data.items():
             if value["expiry_time"] and value["expiry_time"] < datetime.datetime.now():
                 del self.data[key]
