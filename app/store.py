@@ -9,6 +9,7 @@ class KeyValueStore:
         return self.data.get(key)
 
     def set(self, key, value, expiry_milliseconds=None):
+        expiry_time = None
         if expiry_milliseconds:
             expiry_time = datetime.datetime.now() + datetime.timedelta(
                 milliseconds=expiry_milliseconds
