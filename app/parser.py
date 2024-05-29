@@ -39,7 +39,7 @@ class RespParser:
                 command.add_data(token.decode())
                 if message_length == 0:
                     self.state = self.State.DONE
-            if self.state == self.State.DONE:
+            if self.state == self.State.DONE or message_length == 0:
                 commands.append(command)
                 self.state = self.State.START
                 message_length = 0
@@ -84,22 +84,19 @@ class Command:
 
 def run_tests():
     print("Running tests")
-    parser = RespParser()
     msg1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
-    resp1 = parser.parse(msg1)
+    resp1 = RespParser().parse(msg1)
     assert resp1[0] == Command("SET", ["mykey", "myvalue"])
 
     msg2 = b"*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n"
-    parser = RespParser()
-    resp2 = parser.parse(msg2)
+    resp2 = RespParser().parse(msg2)
     print("Resp2", resp2)
     assert resp2[0] == Command("SET", ["bar", "456"])
     assert resp2[1] == Command("SET", ["baz", "789"])
     assert len(resp2) == 2
 
     msg3 = b"+PONG\r\n"
-    parser = RespParser()
-    resp3 = parser.parse(msg3)
+    resp3 = RespParser().parse(msg3)
     assert resp3[0] == Command("PONG")
 
     msg4 = b"*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"
