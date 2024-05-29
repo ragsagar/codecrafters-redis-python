@@ -295,7 +295,7 @@ class MasterConnection:
                 if self.state == MasterConnectionState.WAITING_FOR_PING:
                     print("Sending ping to master")
                     sock.sendall(self.encoder.generate_array_string(["PING"]))
-                    self.state = MasterConnectionState.WAITING_FOR_PORT
+                    self.set_state(MasterConnectionState.WAITING_FOR_PORT)
                 elif data.outb and self.state == MasterConnectionState.WAITING_FOR_PORT:
                     print("Sending port to master")
                     sock.sendall(
@@ -303,7 +303,7 @@ class MasterConnection:
                             ["REPLCONF", "listening-port", str(self.listening_port)]
                         )
                     )
-                    self.state = MasterConnectionState.WAITING_FOR_CAPA
+                    self.set_state(MasterConnectionState.WAITING_FOR_CAPA)
                 elif data.outb and self.state == MasterConnectionState.WAITING_FOR_CAPA:
                     print("Sending capa to master")
                     sock.sendall(
@@ -311,7 +311,7 @@ class MasterConnection:
                             ["REPLCONF", "capa", "psync2"]
                         )
                     )
-                    self.state = MasterConnectionState.WAITING_FOR_PSYNC
+                    self.set_state(MasterConnectionState.WAITING_FOR_PSYNC)
                 elif (
                     data.outb and self.state == MasterConnectionState.WAITING_FOR_PSYNC
                 ):
@@ -321,7 +321,7 @@ class MasterConnection:
                             ["PSYNC", self.replica_id, str(self.offset)]
                         )
                     )
-                    self.state = MasterConnectionState.WAITING_FOR_FULLRESYNC
+                    self.set_state(MasterConnectionState.WAITING_FOR_FULLRESYNC)
                     self.log("Waiting for fullresync from master")
                 elif (
                     data.outb
@@ -332,7 +332,7 @@ class MasterConnection:
                     if incoming.startswith("+FULLRESYNC"):
                         self.replica_id, self.offset = incoming.split(" ")[1:]
                         self.log(f"Replica id {self.replica_id} offset {self.offset}")
-                        self.state = MasterConnectionState.READY
+                        self.set_state(MasterConnectionState.WAITING_FOR_FILE)
                         self.log("waiting for file")
                     else:
                         raise Exception(
@@ -342,7 +342,7 @@ class MasterConnection:
                     incoming = self.parse_message(data.outb)
                     self.log(f"Received rdb file from master {incoming}")
                     self.log("Received incoming", incoming)
-                    self.state = MasterConnectionState.READY
+                    self.set_state(MasterConnectionState.READY)
             elif data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
                 self.log("Expired data")
@@ -350,6 +350,10 @@ class MasterConnection:
                 if not response:
                     sock.sendall(self.encoder.generate_success_string())
             data.outb = b""
+
+    def set_state(self, state):
+        print(f"Changing state from {self.state} to {state}")
+        self.state = state
 
     def log(self, message, *args):
         print("Replica: ", message, *args)
