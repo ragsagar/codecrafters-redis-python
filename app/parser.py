@@ -101,6 +101,10 @@ def run_tests():
     resp3 = parser.parse(msg3)
     assert resp3[0] == Command("PONG")
 
+    msg4 = b"*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"
+    resp4 = RespParser().parse(msg4)
+    assert resp4[0] == Command("GET", ["foo"])
+
     print("All tests passed")
 
 
