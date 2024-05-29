@@ -163,7 +163,7 @@ class RedisServer:
                 #     response_msg = self.encoder.generate_bulkstring("Unknown command")
                 # else:
                 #     response_msg = handler_func(data, incoming, sock)
-                response_msg = self.command_handler.handle_command(data, sock)
+                response_msg = self.command_handler.handle_message(data, sock)
                 self.replicate_if_required(data, command)
                 self.sendall(response_msg, sock)
                 data.outb = b""
@@ -281,7 +281,7 @@ class MasterConnection:
             elif data.outb and self.state == MasterConnectionState.READY:
                 self.server.expire_data(data)
                 self.log("Expired data")
-                response = self.command_handler.handle_command(data, sock)
+                response = self.command_handler.handle_message(data, sock)
                 if not response:
                     sock.sendall(self.encoder.generate_success_string())
             data.outb = b""
