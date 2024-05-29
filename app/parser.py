@@ -12,42 +12,39 @@ class RespParser:
         self.state = self.State.START
 
     def parse(self, message):
-        parts = message.strip().split(b"\r\n")
+        tokens = message.strip().split(b"\r\n")
         message_length = 0
         command = None
         commands = []
-        print("parse", parts)
-        for part in parts:
-            if message_length < 0:
-                raise ValueError("Invalid message", parts)
-            if part.startswith(b"$"):
+        cursor = 0
+        while cursor < len(tokens):
+            token = tokens[cursor]
+            if token.startswith(b"$"):
                 # byte length
+                cursor += 1
                 continue
             if self.state == self.State.START:
-                if part.startswith(b"*"):
-                    message_length = int(part[1:])
+                if token.startswith(b"*"):
+                    message_length = int(token[1:])
                     self.state = self.State.COMMAND
-                elif part.startswith(b"+"):
-                    command = Command(part[1:].decode())
-                    commands.append(command)
-                    self.state = self.State.START
-                    command = None
+                elif token.startswith(b"+"):
+                    command = Command(token[1:].decode())
+                    self.state = self.State.DONE
             elif self.state == self.State.COMMAND:
                 message_length -= 1
-                command = Command(part.decode())
+                command = Command(token.decode())
                 self.state = self.State.DATA
             elif self.state == self.State.DATA:
-                print("Collecting data", part, message_length)
-                if message_length <= 1:
+                message_length -= 1
+                command.add_data(token.decode())
+                if message_length == 0:
                     self.state = self.State.DONE
-                else:
-                    message_length -= 1
-                    command.add_data(part.decode())
-            elif self.state == self.State.DONE:
-                command.add_data(part.decode())
+            if self.state == self.State.DONE:
                 commands.append(command)
                 self.state = self.State.START
+                message_length = 0
                 command = None
+            cursor += 1
         return commands
 
 
@@ -82,7 +79,7 @@ class Command:
         return f"{self.command} {self.data}"
 
     def __eq__(self, other):
-        return self.command == other.command and self.data == other.data
+        return other and self.command == other.command and self.data == other.data
 
 
 def run_tests():
@@ -95,6 +92,7 @@ def run_tests():
     msg2 = b"*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n"
     parser = RespParser()
     resp2 = parser.parse(msg2)
+    print("Resp2", resp2)
     assert resp2[0] == Command("SET", ["bar", "456"])
     assert resp2[1] == Command("SET", ["baz", "789"])
     assert len(resp2) == 2
