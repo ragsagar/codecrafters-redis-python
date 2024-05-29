@@ -20,6 +20,7 @@ class CommandHandler:
     def _handle_get_command(self, data, cmd, sock):
         key = cmd.data[0]
         value = self.server.get_data(key)
+        print(f"Getting value for key {key}", value)
         if value:
             response_msg = self.server.encoder.generate_bulkstring(value)
         else:
