@@ -62,6 +62,11 @@ class CommandHandler:
 
     def _handle_replconf_command(self, data, cmd, sock):
         print("Received replconf command", cmd)
+        # Possible commads: listening-port, capa during handshake
+        # GETACK periodically.
+        if cmd.data[0].upper() == "GETACK":
+            # self.server.set_repl_ack()
+            return self.server.encoder.generate_bulkstring(["REPLCONF", "ACK", "0"])
         return self.server.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):
