@@ -200,6 +200,7 @@ class MasterConnection:
     listening_port = None
     replica_id = "?"
     offset = -1
+    offset_count = 0
 
     def __init__(self, server, listening_port, socket, command_handler):
         self.server = server
@@ -283,7 +284,7 @@ class MasterConnection:
             self.log(f"Received commands from master {commands}")
             command = commands[0]
             if command.command == "REPLCONF" and command.data[0] == b"GETACK":
-                response = self.encoder.generate_bulkstring("REPLCONF ACK 0")
+                response = self.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
                 sock.sendall(response)
             self.set_state(MasterConnectionState.READY)
 
