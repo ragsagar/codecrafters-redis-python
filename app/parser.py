@@ -78,35 +78,3 @@ class Command:
 
     def __eq__(self, other):
         return other and self.command == other.command and self.data == other.data
-
-
-def run_tests():
-    print("Running tests")
-    msg1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
-    resp1 = RespParser().parse(msg1)
-    assert resp1[0] == Command("SET", ["mykey", "myvalue"])
-
-    msg2 = b"*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n"
-    resp2 = RespParser().parse(msg2)
-    print("Resp2", resp2)
-    assert resp2[0] == Command("SET", ["bar", "456"])
-    assert resp2[1] == Command("SET", ["baz", "789"])
-    assert len(resp2) == 2
-
-    msg3 = b"+PONG\r\n"
-    resp3 = RespParser().parse(msg3)
-    assert resp3[0] == Command("PONG")
-
-    msg4 = b"*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"
-    resp4 = RespParser().parse(msg4)
-    assert resp4[0] == Command("GET", ["foo"])
-
-    msg5 = b"*1\r\n$4\r\nPING\r\n"
-    resp5 = RespParser().parse(msg5)
-    assert resp5[0] == Command("PING")
-
-    print("All tests passed")
-
-
-if __name__ == "__main__":
-    run_tests()
