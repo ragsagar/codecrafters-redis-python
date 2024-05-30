@@ -85,7 +85,7 @@ class RedisServer:
             commands.append(parts[i * 2 + 2].decode())
         return commands
 
-    def expire_data(self, data):
+    def expire_data(self):
         self.store.expire_data()
 
     def get_data(self, key):
@@ -127,6 +127,7 @@ class RedisServer:
                         self.master_connection.service_connection(key, mask)
                     else:
                         self.service_connection(key, mask)
+                    self.expire_data()
         finally:
             sel.close()
             self.server_socket.close()
@@ -156,7 +157,6 @@ class RedisServer:
                 sock.close()
         if mask & selectors.EVENT_WRITE:
             if data.outb:
-                self.expire_data(data)
                 incoming = self.parse_message(data.outb)
                 command = incoming[0].lower()
                 response_msg = self.command_handler.handle_message(data, sock)
@@ -226,8 +226,13 @@ class MasterConnection:
             if self.state != MasterConnectionState.READY:
                 self.do_handshake(data, sock)
             elif data.outb and self.state == MasterConnectionState.READY:
-                self.server.expire_data(data)
-                self.log("Expired data")
+                # commands = self.parser.parse(data.outb)
+                # for command in commands:
+                #     response = self.command_handler.handle_message(data, sock)
+                #     if response:
+                #         print("Sending", response)
+                #         sock.sendall(response)
+                # self.log("Expired data")
                 response = self.command_handler.handle_message(data, sock)
                 if response:
                     print("Sending", response)
@@ -278,7 +283,7 @@ class MasterConnection:
             # incoming = self.parse_message(data.outb)
             commands = self.parser.parse(data.outb)
             self.log(f"Received commands from master while waiting for file {commands}")
-            self.set_state(MasterConnectionState.WAITING_FOR_ACK)
+            self.set_state(MasterConnectionState.READY)
         elif data.outb and self.state == MasterConnectionState.WAITING_FOR_ACK:
             commands = self.parser.parse(data.outb)
             self.log(f"Received commands from master {commands}")

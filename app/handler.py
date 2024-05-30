@@ -66,7 +66,7 @@ class CommandHandler:
         # GETACK periodically.
         if cmd.data[0].upper() == b"GETACK":
             # self.server.set_repl_ack()
-            return self.server.encoder.generate_bulkstring(["REPLCONF", "ACK", "0"])
+            return self.server.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
         return self.server.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):

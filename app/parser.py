@@ -74,11 +74,8 @@ class RespParser:
                 cursor += 1
             elif message[cursor] == b"$":
                 cursor, data_length = self.read_number(message, cursor + 1)
-                print("Data length", data_length, len(message))
                 cursor = self.skip_newline(message, cursor)
-                print("Cursor", cursor, message[cursor])
                 cursor, data = self.read_bytes(message, data_length, cursor)
-                print("Parsed Data", data, cursor)
                 commands.append(Command("RDB", [data]))
             else:
                 cursor += 1
