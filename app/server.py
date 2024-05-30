@@ -192,6 +192,10 @@ class MasterConnectionState(Enum):
     READY = "ready"
 
 
+class MasterHandshakeException(Exception):
+    pass
+
+
 class MasterConnection:
     state = MasterConnectionState.WAITING_FOR_PING
     server = None
@@ -270,7 +274,7 @@ class MasterConnection:
                         self.set_state(MasterConnectionState.WAITING_FOR_FILE)
                         self.log("waiting for file")
                     else:
-                        raise Exception(
+                        raise MasterHandshakeException(
                             "Unexpected state, expected fullresync", incoming
                         )
                 elif data.outb and self.state == MasterConnectionState.WAITING_FOR_FILE:

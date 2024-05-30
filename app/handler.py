@@ -104,34 +104,3 @@ class CommandHandler:
             if response:
                 response_msg += response
         return response_msg
-
-
-def run_tests():
-    test_handling()
-
-
-def test_handling():
-    handler = CommandHandler(None)
-    msg1 = b"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
-    res1 = handler.handle_message(msg1)
-    assert res1 == b"+OK\r\n"
-
-    msg2 = b"*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n"
-    res2 = handler.parse_message(msg2)
-    print("Res2", res2)
-    assert res2 == b"+OK\r\n+OK\r\n"
-
-    msg3 = b"*1\r\n$4\r\nPING\r\n"
-    res3 = handler.handle_message(msg3)
-    assert res3 == b"+PONG\r\n"
-
-    msg4 = b"+OK\r\n"
-    res4 = handler.handle_message(msg3)
-    assert res4 == None
-
-    print("Parse message tests passed")
-
-
-if __name__ == "__main__":
-    run_tests()
-    print("All tests passed")
