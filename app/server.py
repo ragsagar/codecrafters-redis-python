@@ -185,6 +185,7 @@ class MasterConnectionState(Enum):
     WAITING_FOR_PSYNC = "waiting_for_psync"
     WAITING_FOR_FULLRESYNC = "waiting_for_fullresync"
     WAITING_FOR_FILE = "waiting_for_file"
+    WAITING_FOR_ACK = "waiting_for_ack"
     READY = "ready"
 
 
@@ -276,11 +277,14 @@ class MasterConnection:
             # incoming = self.parse_message(data.outb)
             commands = self.parser.parse(data.outb)
             self.log(f"Received commands from master {commands}")
-            command = commands[1]
-            if command.command == "REPLCONF" and command.data[0] == "GETACK":
+            self.set_state(MasterConnectionState.WAITING_FOR_ACK)
+        elif data.outb and self.state == MasterConnectionState.WAITING_FOR_ACK:
+            commands = self.parser.parse(data.outb)
+            self.log(f"Received commands from master {commands}")
+            command = commands[0]
+            if command.command == "REPLCONF" and command.data[0] == b"GETACK":
                 response = self.encoder.generate_bulkstring(["REPLCONF", "ACK", "0"])
                 sock.sendall(response)
-            self.log("Received incoming", incoming)
             self.set_state(MasterConnectionState.READY)
 
     def set_state(self, state):
