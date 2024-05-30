@@ -275,11 +275,11 @@ class MasterConnection:
         elif data.outb and self.state == MasterConnectionState.WAITING_FOR_FILE:
             # incoming = self.parse_message(data.outb)
             commands = self.parser.parse(data.outb)
-            command = commands[0]
+            self.log(f"Received commands from master {commands}")
+            command = commands[1]
             if command.command == "REPLCONF" and command.data[0] == "GETACK":
                 response = self.encoder.generate_bulkstring(["REPLCONF", "ACK", "0"])
                 sock.sendall(response)
-            self.log(f"Received rdb file from master {incoming}")
             self.log("Received incoming", incoming)
             self.set_state(MasterConnectionState.READY)
 
