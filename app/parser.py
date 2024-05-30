@@ -12,7 +12,8 @@ class RespParser:
         self.state = self.State.START
 
     def parse(self, message):
-        tokens = message.strip().split(b"\r\n")
+        tokens = message.strip()
+        print(tokens)
         message_length = 0
         command = None
         commands = []
@@ -25,10 +26,15 @@ class RespParser:
                 continue
             if self.state == self.State.START:
                 if token.startswith(b"*"):
+                    print(token)
                     message_length = int(token[1:])
                     self.state = self.State.COMMAND
                 elif token.startswith(b"+"):
                     command = Command(token[1:].decode())
+                    message_length = 0
+                elif token.startswith(b"REDIS"):
+                    # RDB file special case
+                    command = Command("RDB", [token])
                     message_length = 0
             elif self.state == self.State.COMMAND:
                 message_length -= 1

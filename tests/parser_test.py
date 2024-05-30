@@ -30,3 +30,34 @@ class TestRespParser(unittest.TestCase):
         msg = b"*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"
         resp = RespParser().parse(msg)
         self.assertEqual(resp, [Command("GET", ["foo"])])
+
+    def test_parse_rdb_command(self):
+        msg = b"$88\r\nREDIS0011\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2m\x08\xbce\xfa\x08used-mem\xc2\xb0\xc4\x10\x00\xfa\x08aof-base\xc0\x00\xff\xf0n;\xfe\xc0\xffZ\xa2"
+        resp = RespParser().parse(msg)
+        self.assertEqual(
+            resp,
+            [
+                Command(
+                    "RDB",
+                    [
+                        b"REDIS0011\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2m\x08\xbce\xfa\x08used-mem\xc2\xb0\xc4\x10\x00\xfa\x08aof-base\xc0\x00\xff\xf0n;\xfe\xc0\xffZ\xa2"
+                    ],
+                )
+            ],
+        )
+
+    def test_parse_rdb_with_ack_command(self):
+        msg = b"$88\r\nREDIS0011\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2m\x08\xbce\xfa\x08used-mem\xc2\xb0\xc4\x10\x00\xfa\x08aof-base\xc0\x00\xff\xf0n;\xfe\xc0\xffZ\xa2*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(
+            resp,
+            [
+                Command(
+                    "RDB",
+                    [
+                        b"REDIS0011\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2m\x08\xbce\xfa\x08used-mem\xc2\xb0\xc4\x10\x00\xfa\x08aof-base\xc0\x00\xff\xf0n;\xfe\xc0\xffZ\xa2"
+                    ],
+                ),
+                Command("REPLCONF", ["GETACK", "*"]),
+            ],
+        )
