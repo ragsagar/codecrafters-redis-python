@@ -143,7 +143,6 @@ class RedisServer:
         )
 
     def service_connection(self, key, mask):
-        self.expire_data()
         sock = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
@@ -163,6 +162,7 @@ class RedisServer:
                 self.replicate_if_required(data, command)
                 self.sendall(response_msg, sock)
                 data.outb = b""
+                self.expire_data()
 
     def replicate_if_required(self, data, command):
         if self.is_write_command(command):
