@@ -127,7 +127,7 @@ class RedisServer:
                         self.master_connection.service_connection(key, mask)
                     else:
                         self.service_connection(key, mask)
-                    self.expire_data()
+                self.expire_data()
         finally:
             sel.close()
             self.server_socket.close()
