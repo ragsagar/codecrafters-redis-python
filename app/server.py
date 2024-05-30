@@ -277,7 +277,7 @@ class MasterConnection:
         elif data.outb and self.state == MasterConnectionState.WAITING_FOR_FILE:
             # incoming = self.parse_message(data.outb)
             commands = self.parser.parse(data.outb)
-            self.log(f"Received commands from master {commands}")
+            self.log(f"Received commands from master while waiting for file {commands}")
             self.set_state(MasterConnectionState.WAITING_FOR_ACK)
         elif data.outb and self.state == MasterConnectionState.WAITING_FOR_ACK:
             commands = self.parser.parse(data.outb)
