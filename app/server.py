@@ -297,6 +297,12 @@ class MasterConnection:
                     print("Received RDB file from master", command.data)
                     self.set_state(MasterConnectionState.READY)
 
+                if command.command == "REPLCONF" and command.data[0] == b"GETACK":
+                    response = self.encoder.generate_array_string(
+                        ["REPLCONF", "ACK", "0"]
+                    )
+                    sock.sendall(response)
+
                 # if self.state == MasterConnectionState.WAITING_FOR_PONG:
                 #     sock.sendall(self.encoder.generate_array_string(["PING"]))
                 # elif data.outb and self.state == MasterConnectionState.WAITING_FOR_PORT:
