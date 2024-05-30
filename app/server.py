@@ -127,7 +127,6 @@ class RedisServer:
                         self.master_connection.service_connection(key, mask)
                     else:
                         self.service_connection(key, mask)
-                self.expire_data()
         finally:
             sel.close()
             self.server_socket.close()
@@ -144,6 +143,7 @@ class RedisServer:
         )
 
     def service_connection(self, key, mask):
+        self.expire_data()
         sock = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
