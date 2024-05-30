@@ -240,6 +240,8 @@ class MasterConnection:
             data.outb = b""
 
     def do_handshake(self, data, sock):
+        commands = self.parser.parse(data.outb)
+        print("Handshake Commands", commands)
         if self.state == MasterConnectionState.WAITING_FOR_PING:
             print("Sending ping to master")
             sock.sendall(self.encoder.generate_array_string(["PING"]))
