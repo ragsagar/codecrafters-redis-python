@@ -1,10 +1,15 @@
+from enum import Enum
+
 from .parser import RespParser
+from .encoder import Encoder
 
 
 class CommandHandler:
-    def __init__(self, server):
+    def __init__(self, server, connection=None):
         self.server = server
         self.parser = RespParser()
+        self.connection = connection
+        self.encoder = Encoder()
 
     def get_set_success_response(self):
         return self.server.encoder.generate_success_string()
@@ -64,12 +69,6 @@ class CommandHandler:
         return self.server.encoder.generate_bulkstring("PONG")
 
     def _handle_replconf_command(self, data, cmd, sock):
-        print("Received replconf command", cmd)
-        # Possible commads: listening-port, capa during handshake
-        # GETACK periodically.
-        if cmd.data[0] == b"GETACK":
-            # self.server.set_repl_ack()
-            return self.server.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
         return self.server.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):
@@ -111,5 +110,68 @@ class CommandHandler:
 
 
 class ClientCommandHandler(CommandHandler):
+    class State(Enum):
+        INIT = 1
+        WAITING_FOR_PONG = 2
+        WAITING_FOR_PORT_RESPONSE = 3
+        WAITING_FOR_CAPA_RESPONSE = 4
+        WAITING_FOR_FULLRESYNC = 5
+        WAITING_FOR_FILE = 6
+        READY = 7
+
+    state = State.WAITING_FOR_PONG
+
+    def _handle_pong_command(self, data, cmd, sock):
+        if self.state == self.State.WAITING_FOR_PONG:
+            self.state = self.State.WAITING_FOR_PORT_RESPONSE
+            return self.server.encoder.generate_array_string(
+                ["REPLCONF", "listening-port", self.connection.get_listening_port()]
+            )
+        return None
+
+    def _handle_ok_command(self, data, cmd, sock):
+        if self.state == self.State.WAITING_FOR_PORT_RESPONSE:
+            self.state = self.State.WAITING_FOR_CAPA_RESPONSE
+            return self.server.encoder.generate_array_string(
+                ["REPLCONF", "capa", "eof"]
+            )
+        elif self.state == self.State.WAITING_FOR_CAPA_RESPONSE:
+            self.state = self.State.WAITING_FOR_FULLRESYNC
+            return self.server.encoder.generate_null_string()
+        return super()._handle_ok_command(data, cmd, sock)
+
+    def _handle_fullresync_command(self, data, cmd, sock):
+        if self.state == self.State.WAITING_FOR_FULLRESYNC:
+            replica_id, offset = cmd.data
+            self.connection.set_offset_and_replica(offset.decode(), replica_id.decode())
+            self.state = self.State.WAITING_FOR_FILE
+            return self.server.encoder.generate_simple_string("ACK")
+        return None
+
+    def _handle_rdb_command(self, data, cmd, sock):
+        print("Received RDB file", cmd.data[0])
+        return None
+
+    def _handle_replconf_command(self, data, cmd, sock):
+        print("Received replconf command", cmd)
+        # Possible commads: listening-port, capa during handshake
+        # GETACK periodically.
+        if cmd.data[0] == b"GETACK":
+            return self.server.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
+        return super()._handle_replconf_command(data, cmd, sock)
+
     def get_set_success_response(self):
-        return self.server.encoder.generate_null_string()
+        return self.encoder.generate_null_string()
+
+    def handle_message(self, data, sock):
+        # if self.state == self.State.INIT:
+        #     self.state = self.State.WAITING_FOR_PONG
+        #     return self.server.encoder.generate_array_string(["PING"])
+        commands = self.parse_message(data.outb)
+        print("Commands found in handler", commands)
+        response_msg = b""
+        for command in commands:
+            response = self.handle_single_command(data, command, sock)
+            if response:
+                response_msg += response
+        return response_msg
