@@ -23,3 +23,6 @@ class Encoder:
     def generate_file_string(self, hex_contents):
         byte_contents = bytes.fromhex(hex_contents)
         return f"${len(byte_contents)}\r\n".encode() + byte_contents
+
+    def generate_double_string(self, num):
+        return f",{num}\r\n".encode()
