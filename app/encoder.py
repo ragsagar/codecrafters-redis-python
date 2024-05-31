@@ -24,5 +24,5 @@ class Encoder:
         byte_contents = bytes.fromhex(hex_contents)
         return f"${len(byte_contents)}\r\n".encode() + byte_contents
 
-    def generate_double_string(self, num):
+    def generate_integer_string(self, num):
         return f":{num}\r\n".encode()
