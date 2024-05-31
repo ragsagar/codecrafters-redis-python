@@ -316,4 +316,4 @@ class MasterConnection:
         return self.replica_id
 
     def get_offset(self):
-        return self.offset_count
+        return self.offset
