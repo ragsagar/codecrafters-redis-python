@@ -127,7 +127,11 @@ class ClientCommandHandler(CommandHandler):
         if self.state == self.State.WAITING_FOR_PONG:
             self.state = self.State.WAITING_FOR_PORT_RESPONSE
             return self.server.encoder.generate_array_string(
-                ["REPLCONF", "listening-port", self.connection.get_listening_port()]
+                [
+                    "REPLCONF",
+                    "listening-port",
+                    str(self.connection.get_listening_port()),
+                ]
             )
         return None
 
