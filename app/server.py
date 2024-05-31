@@ -7,7 +7,7 @@ from .utils import generate_repl_id
 from .replica import Replica
 from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
-from .parser import RespParser
+from .master_connection import MasterConnection
 
 sel = selectors.DefaultSelector()
 

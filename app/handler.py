@@ -175,9 +175,6 @@ class ClientCommandHandler(CommandHandler):
         return self.encoder.generate_null_string()
 
     def handle_message(self, data, sock):
-        # if self.state == self.State.INIT:
-        #     self.state = self.State.WAITING_FOR_PONG
-        #     return self.server.encoder.generate_array_string(["PING"])
         commands = self.parse_message(data.outb)
         print("Commands found in handler", commands)
         response_msg = b""
