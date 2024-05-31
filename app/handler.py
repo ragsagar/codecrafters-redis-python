@@ -91,8 +91,6 @@ class CommandHandler:
         return commands
 
     def handle_single_command(self, data, command, sock):
-        function_name = f"_handle_{command.command.lower()}_command"
-        print(self.__class__, "Function name", function_name)
         handler_func = getattr(self, f"_handle_{command.command.lower()}_command", None)
         if not handler_func:
             response_msg = self.server.encoder.generate_bulkstring("Unknown command")
@@ -183,9 +181,9 @@ class ClientCommandHandler(CommandHandler):
     def get_set_success_response(self):
         return None
 
-    def increment_offset(self, message):
+    def increment_offset(self, command):
         if self.state == self.State.RECORD_OFFSET:
-            self.offset_count += len(message)
+            self.offset_count += command.get_size()
             print(
                 f"Incremented offset count to {self.offset_count} Last message: ${message}, length: {len(message)}"
             )
@@ -198,5 +196,5 @@ class ClientCommandHandler(CommandHandler):
             response = self.handle_single_command(data, command, sock)
             if response:
                 response_msg += response
-        self.increment_offset(data.outb)
+            self.increment_offset(command)
         return response_msg
