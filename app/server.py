@@ -1,3 +1,4 @@
+import datetime
 import socket
 import selectors
 import types
@@ -23,6 +24,7 @@ class RedisServer:
     server_type = ServerType.MASTER
     master_connection = None
     store = None
+    waiting_clients = []
 
     def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
         self.port = port
@@ -172,9 +174,35 @@ class RedisServer:
         if self.is_write_command(command):
             for replica in self.replicas:
                 replica.send_message(data.outb)
+        self.check_if_client_waiting()
+
+    def check_if_client_waiting(self):
+        processed_replicas = self.processed_replicas()
+        for index, (sock, min_count, expiry_time) in enumerate(self.waiting_clients):
+            if (
+                processed_replicas >= min_count
+                or expiry_time <= datetime.datetime.now()
+            ):
+                self.sendall(
+                    self.encoder.generate_integer_string(processed_replicas), sock
+                )
+                del self.waiting_clients[index]
+
+    def add_waiter(self, sock, min_count, timeout):
+        expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
+        self.waiting_clients.append((sock, min_count, expiry_time))
 
     def processed_replicas(self):
         return sum([1 for i in self.replicas if i.is_processed()])
+
+    def received_replica_offset(self, offset_count, sock):
+        replica = next((i for i in self.replicas if i.socket == sock), None)
+        if replica:
+            print("Received offset from replica", replica.addr, offset_count)
+            replica.update_processed(offset_count)
+            self.log(f"Replica {replica.addr} processed {offset_count} commands")
+        else:
+            self.log("Received offset from unknown replica", sock.addr)
 
     def sendall(self, message, sock):
         print(f"Sending message {message}")

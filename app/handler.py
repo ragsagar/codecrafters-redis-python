@@ -69,8 +69,15 @@ class CommandHandler:
     def _handle_ping_command(self, data, cmd, sock):
         return self.server.encoder.generate_bulkstring("PONG")
 
+    # def _handle_replconf_command(self, data, cmd, sock):
+    #     return self.server.encoder.generate_success_string()
+
     def _handle_replconf_command(self, data, cmd, sock):
-        return self.server.encoder.generate_success_string()
+        print("Received replconf command on master, ", cmd)
+        if cmd.data[0] == b"ACK":
+            offset_count = int(cmd.data[1].decode())
+            self.server.received_replica_offset(offset_count, sock)
+        return self.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):
         print("Received psync command", cmd)
@@ -91,8 +98,9 @@ class CommandHandler:
         min_required = int(cmd.data[0].decode())
         timeout = int(cmd.data[1].decode())
         print("Min required", min_required, "Timeout", timeout)
-        time.sleep(timeout)
-        return self.encoder.generate_integer_string(self.server.get_replica_count())
+        self.server.add_waiter(sock, min_required, timeout)
+        # return self.encoder.generate_integer_string(self.server.get_replica_count())
+        return None
 
     def parse_message(self, message):
         commands = self.parser.parse(message)

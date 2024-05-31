@@ -17,11 +17,29 @@ class Replica:
         self.offset = offset
         self.replid = replica_id
         self.encoder = Encoder()
+        self.processed = True
+        self.sent_count = 0
+
+    def send_write_command(self, message):
+        self.send_message(message)
         self.processed = False
+        self.sent_count += len(message)
 
     def send_message(self, message):
         print(f"Syncing with replica {self.addr}", message)
         self.socket.sendall(message)
+
+    def check_processed(self):
+        print("Checking if replica is processed")
+        self.send_message(
+            self.encoder.generate_array_string(["REPLCONF", "GETACK", "0"])
+        )
+
+    def update_processed(self, offset_count):
+        if self.sent_count == offset_count:
+            self.processed = True
+        else:
+            self.processed = False
 
     def is_processed(self):
         return self.processed
