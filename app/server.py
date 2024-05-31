@@ -222,20 +222,21 @@ class MasterConnection:
                 sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
-            if self.state != MasterConnectionState.READY:
-                self.do_handshake(data, sock)
-            elif data.outb and self.state == MasterConnectionState.READY:
-                # commands = self.parser.parse(data.outb)
-                # for command in commands:
-                #     response = self.command_handler.handle_message(data, sock)
-                #     if response:
-                #         print("Sending", response)
-                #         sock.sendall(response)
-                # self.log("Expired data")
-                response = self.command_handler.handle_message(data, sock)
-                if response:
-                    print("Sending", response)
-                    sock.sendall(response)
+            # if self.state != MasterConnectionState.READY:
+            #     self.do_handshake(data, sock)
+            # elif data.outb and self.state == MasterConnectionState.READY:
+            #     # commands = self.parser.parse(data.outb)
+            #     # for command in commands:
+            #     #     response = self.command_handler.handle_message(data, sock)
+            #     #     if response:
+            #     #         print("Sending", response)
+            #     #         sock.sendall(response)
+            #     # self.log("Expired data")
+            #     response = self.command_handler.handle_message(data, sock)
+            #     if response:
+            #         print("Sending", response)
+            #         sock.sendall(response)
+            self.do_handshake(data, sock)
             data.outb = b""
 
     def do_handshake(self, data, sock):
@@ -245,7 +246,7 @@ class MasterConnection:
             self.set_state(MasterConnectionState.WAITING_FOR_PONG)
         if data.outb:
             commands = self.parser.parse(data.outb)
-            print("Handshake Commands", commands)
+            print("Received commands", commands)
             for command in commands:
                 if (
                     command.command == "PONG"
