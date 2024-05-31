@@ -1,3 +1,4 @@
+import selectors
 from .handler import ClientCommandHandler
 from .encoder import Encoder
 from .parser import RespParser
