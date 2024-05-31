@@ -28,6 +28,7 @@ class RespParser:
     def read_command(self, message, cursor, part_length):
         while message[cursor] != b"$":
             cursor += 1
+
         cursor, command_length = self.read_number(message, cursor + 1)
         cursor = self.skip_newline(message, cursor)
         command_string = b"".join(message[cursor : cursor + command_length])
@@ -64,8 +65,11 @@ class RespParser:
         message = [i.to_bytes(1, sys.byteorder) for i in msg]
         while cursor < len(message):
             if message[cursor] == b"*":
+                cursor_start = cursor
                 cursor, part_length = self.read_number(message, cursor + 1)
                 cursor, command = self.read_command(message, cursor, part_length)
+                size = cursor - cursor_start + 2  # 2 for \r\n
+                command.set_size(size)
                 commands.append(command)
                 cursor += 1
             elif message[cursor] == b"+":
@@ -80,46 +84,6 @@ class RespParser:
                 commands.append(Command("RDB", [data]))
             else:
                 cursor += 1
-        return commands
-
-    def parse_old(self, message):
-        tokens = message.strip()
-        print(tokens)
-        message_length = 0
-        command = None
-        commands = []
-        cursor = 0
-        while cursor < len(tokens):
-            token = tokens[cursor]
-            if token.startswith(b"$"):
-                # byte length
-                cursor += 1
-                continue
-            if self.state == self.State.START:
-                if token.startswith(b"*"):
-                    print(token)
-                    message_length = int(token[1:])
-                    self.state = self.State.COMMAND
-                elif token.startswith(b"+"):
-                    command = Command(token[1:].decode())
-                    message_length = 0
-                elif token.startswith(b"REDIS"):
-                    # RDB file special case
-                    command = Command("RDB", [token])
-                    message_length = 0
-            elif self.state == self.State.COMMAND:
-                message_length -= 1
-                command = Command(token.decode())
-                self.state = self.State.DATA
-            elif self.state == self.State.DATA:
-                message_length -= 1
-                command.add_data(token.decode())
-            if message_length == 0:
-                commands.append(command)
-                self.state = self.State.START
-                message_length = 0
-                command = None
-            cursor += 1
         return commands
 
 
@@ -137,15 +101,22 @@ class CommandType(Enum):
 class Command:
     data = None
 
-    def __init__(self, command, data=None):
+    def __init__(self, command, data=None, size=0):
         self.command = command
         if data:
             self.data = data
         else:
             self.data = []
+        self.size = size
 
     def add_data(self, data):
         self.data.append(data)
+
+    def get_size(self):
+        return self.size
+
+    def set_size(self, size):
+        self.size = size
 
     def __str__(self):
         return f"{self.command} {self.data}"

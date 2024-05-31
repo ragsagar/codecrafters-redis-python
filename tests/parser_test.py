@@ -74,3 +74,18 @@ class TestRespParser(unittest.TestCase):
                 )
             ],
         )
+
+    def test_ping_size(self):
+        msg = b"*1\r\n$4\r\nPING\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(resp[0].get_size(), 14)
+
+    def test_set_size(self):
+        msg = b"*3\r\n$3\r\nSET\r\n$9\r\nblueberry\r\n$6\r\norange\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(resp[0].get_size(), 40)
+
+    def test_getack_size(self):
+        msg = b"*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(resp[0].get_size(), 37)
