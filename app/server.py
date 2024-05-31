@@ -237,10 +237,10 @@ class MasterConnection:
             #     if response:
             #         print("Sending", response)
             #         sock.sendall(response)
-            self.do_handshake(data, sock)
+            self.handle_incoming_data(data, sock)
             data.outb = b""
 
-    def do_handshake(self, data, sock):
+    def handle_incoming_data(self, data, sock):
         if self.state == MasterConnectionState.INITIAL:
             print("Sending ping to master")
             sock.sendall(self.encoder.generate_array_string(["PING"]))
@@ -305,9 +305,10 @@ class MasterConnection:
                     )
                     sock.sendall(response)
 
-            response = self.command_handler.handle_message(data, sock)
-            if response:
-                sock.sendall(response)
+            if self.state == MasterConnectionState.READY:
+                response = self.command_handler.handle_message(data, sock)
+                if response:
+                    sock.sendall(response)
 
     def set_state(self, state):
         print(f"Changing state from {self.state} to {state}")
