@@ -70,7 +70,8 @@ class RespParser:
                 cursor += 1
             elif message[cursor] == b"+":
                 cursor, string = self.read_pending_bytes(message, cursor + 1)
-                commands.append(Command(string.decode()))
+                parts = string.split()
+                commands.append(Command(parts[0].decode(), data=parts[1:]))
                 cursor += 1
             elif message[cursor] == b"$":
                 cursor, data_length = self.read_number(message, cursor + 1)

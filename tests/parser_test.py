@@ -62,3 +62,15 @@ class TestRespParser(unittest.TestCase):
                 Command("REPLCONF", [b"GETACK", b"*"]),
             ],
         )
+
+    def test_parse_fullresync_command(self):
+        msg = b"+FULLRESYNC 75cd7bc10c49047e0d163660f3b90625b1af31dc 0\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(
+            resp,
+            [
+                Command(
+                    "FULLRESYNC", [b"75cd7bc10c49047e0d163660f3b90625b1af31dc", b"0"]
+                )
+            ],
+        )
