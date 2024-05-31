@@ -7,7 +7,7 @@ from enum import Enum
 from .encoder import Encoder
 from .utils import generate_repl_id
 from .replica import Replica
-from .handler import CommandHandler
+from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
 from .parser import RespParser
 
@@ -208,7 +208,7 @@ class MasterConnection:
         self.command_handler = command_handler
         self.encoder = Encoder()
         self.parser = RespParser()
-        self.handler = CommandHandler(server)
+        self.handler = ClientCommandHandler(server)
 
     def service_connection(self, key, mask):
         sock = key.fileobj
