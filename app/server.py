@@ -307,6 +307,7 @@ class MasterConnection:
 
             if self.state == MasterConnectionState.READY:
                 response = self.command_handler.handle_message(data, sock)
+                print("Sending response from slave:", response)
                 if response:
                     sock.sendall(response)
 
