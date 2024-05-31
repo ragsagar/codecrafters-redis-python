@@ -1,4 +1,4 @@
-import sleep
+import time
 from enum import Enum
 
 from .parser import RespParser
@@ -91,7 +91,7 @@ class CommandHandler:
         min_required = int(cmd.data[0].decode())
         timeout = int(cmd.data[1].decode())
         print("Min required", min_required, "Timeout", timeout)
-        sleep.sleep(timeout)
+        time.sleep(timeout)
         return self.encoder.generate_integer_string(self.server.get_replica_count())
 
     def parse_message(self, message):
