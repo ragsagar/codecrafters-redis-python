@@ -101,6 +101,7 @@ class CommandHandler:
 
     def handle_message(self, data, sock):
         commands = self.parse_message(data.outb)
+        print("Commands found in handler", commands)
         response_msg = b""
         for command in commands:
             response = self.handle_single_command(data, command, sock)
