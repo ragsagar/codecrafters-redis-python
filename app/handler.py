@@ -120,6 +120,7 @@ class ClientCommandHandler(CommandHandler):
         WAITING_FOR_FULLRESYNC = 5
         WAITING_FOR_FILE = 6
         READY = 7
+        RECORD_OFFSET = 8
 
     state = State.WAITING_FOR_PONG
     offset_count = 0
@@ -171,6 +172,8 @@ class ClientCommandHandler(CommandHandler):
         # Possible commads: listening-port, capa during handshake
         # GETACK periodically.
         if cmd.data[0] == b"GETACK":
+            if self.state == self.State.READY:
+                self.state = self.State.RECORD_OFFSET
             print("Sending offset count", self.offset_count)
             return self.encoder.generate_array_string(
                 ["REPLCONF", "ACK", str(self.offset_count)]
@@ -181,7 +184,7 @@ class ClientCommandHandler(CommandHandler):
         return self.encoder.generate_null_string()
 
     def increment_offset(self, message):
-        if self.state == self.State.READY:
+        if self.state == self.State.RECORD_OFFSET:
             self.offset_count += len(message)
 
     def handle_message(self, data, sock):
