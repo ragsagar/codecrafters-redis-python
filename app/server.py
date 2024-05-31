@@ -246,7 +246,7 @@ class MasterConnection:
             self.set_state(MasterConnectionState.WAITING_FOR_PONG)
         if data.outb:
             commands = self.parser.parse(data.outb)
-            print("Received commands", commands)
+            print("Received commands in slave: ", commands)
             for command in commands:
                 if (
                     command.command == "PONG"
