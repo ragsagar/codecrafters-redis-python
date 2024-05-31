@@ -17,7 +17,7 @@ class CommandHandler:
             expiry_command = cmd.data[2]
             if expiry_command.upper() == "PX":
                 expiry_milliseconds = int(cmd.data[3])
-        self.server.set_data(key, value, expiry_milliseconds)
+        self.server.set_data(key.decode(), value.decode(), expiry_milliseconds)
         return self.get_set_success_response()
 
     def _handle_get_command(self, data, cmd, sock):
