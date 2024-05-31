@@ -198,6 +198,7 @@ class MasterConnection:
     replica_id = "?"
     offset = -1
     offset_count = 0
+    sent_ping = False
 
     def __init__(self, server, listening_port, socket):
         self.server = server
@@ -224,75 +225,11 @@ class MasterConnection:
             data.outb = b""
 
     def handle_incoming_data(self, data, sock):
-        if self.state == MasterConnectionState.INITIAL:
+        if not self.sent_ping:
             print("Sending ping to master")
             sock.sendall(self.encoder.generate_array_string(["PING"]))
             self.set_state(MasterConnectionState.WAITING_FOR_PONG)
         if data.outb:
-            # commands = self.parser.parse(data.outb)
-            # print("Received commands in slave: ", commands, self.state)
-            # for command in commands:
-            #     if (
-            #         command.command == "PONG"
-            #         and self.state == MasterConnectionState.WAITING_FOR_PONG
-            #     ):
-            #         print("Sending port to master")
-            #         sock.sendall(
-            #             self.encoder.generate_array_string(
-            #                 ["REPLCONF", "listening-port", str(self.listening_port)]
-            #             )
-            #         )
-            #         self.set_state(MasterConnectionState.WAITING_FOR_PORT_RESPONSE)
-            #     if (
-            #         command.command == "OK"
-            #         and self.state == MasterConnectionState.WAITING_FOR_PORT_RESPONSE
-            #     ):
-            #         print("Received OK from master, Sending capa")
-            #         sock.sendall(
-            #             self.encoder.generate_array_string(
-            #                 ["REPLCONF", "capa", "psync2"]
-            #             )
-            #         )
-            #         self.set_state(MasterConnectionState.WAITING_FOR_CAPA_RESPONSE)
-
-            #     if (
-            #         command.command == "OK"
-            #         and self.state == MasterConnectionState.WAITING_FOR_CAPA_RESPONSE
-            #     ):
-            #         print("Received OK from master, Sending psync")
-            #         sock.sendall(
-            #             self.encoder.generate_array_string(
-            #                 ["PSYNC", self.replica_id, str(self.offset)]
-            #             )
-            #         )
-            #         self.set_state(MasterConnectionState.WAITING_FOR_FULLRESYNC)
-
-            #     if (
-            #         command.command == "FULLRESYNC"
-            #         and self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC
-            #     ):
-            #         self.replica_id, self.offset = command.data
-            #         self.set_state(MasterConnectionState.WAITING_FOR_FILE)
-            #         self.log("Waiting for file")
-
-            #     if (
-            #         command.command == "RDB"
-            #         and self.state == MasterConnectionState.WAITING_FOR_FILE
-            #     ):
-            #         print("Received RDB file from master", command.data)
-            #         self.set_state(MasterConnectionState.READY)
-
-            #     if command.command == "REPLCONF" and command.data[0] == b"GETACK":
-            #         response = self.encoder.generate_array_string(
-            #             ["REPLCONF", "ACK", "0"]
-            #         )
-            #         sock.sendall(response)
-
-            # if self.state == MasterConnectionState.READY:
-            #     response = self.command_handler.handle_message(data, sock)
-            #     print("Sending response from slave:", response)
-            #     if response:
-            #         sock.sendall(response)
             response = self.command_handler.handle_message(data, sock)
             print("Sending response from slave:", response)
             if response:
