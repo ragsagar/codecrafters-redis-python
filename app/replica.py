@@ -40,7 +40,14 @@ class Replica:
             self.processed = True
         else:
             self.processed = False
-        print("Replica", self, "updated as ", self.processed)
+        print(
+            "Replica",
+            self.addr,
+            "updated as ",
+            self.processed,
+            "with sent_count",
+            self.sent_count,
+        )
 
     def is_processed(self):
         return self.processed
