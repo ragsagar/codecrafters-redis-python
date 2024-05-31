@@ -40,6 +40,7 @@ class Replica:
             self.processed = True
         else:
             self.processed = False
+        print("Replica", self, "updated as ", self.processed)
 
     def is_processed(self):
         return self.processed
