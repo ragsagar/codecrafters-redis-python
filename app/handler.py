@@ -181,7 +181,7 @@ class ClientCommandHandler(CommandHandler):
         return super()._handle_replconf_command(data, cmd, sock)
 
     def get_set_success_response(self):
-        return self.encoder.generate_success_string()
+        return None
 
     def increment_offset(self, message):
         if self.state == self.State.RECORD_OFFSET:
