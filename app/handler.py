@@ -124,6 +124,9 @@ class ClientCommandHandler(CommandHandler):
     state = State.WAITING_FOR_PONG
     offset_count = 0
 
+    def _handle_ping_command(self, data, cmd, sock):
+        return None
+
     def _handle_pong_command(self, data, cmd, sock):
         if self.state == self.State.WAITING_FOR_PONG:
             self.state = self.State.WAITING_FOR_PORT_RESPONSE
