@@ -6,6 +6,9 @@ class CommandHandler:
         self.server = server
         self.parser = RespParser()
 
+    def get_set_success_response(self):
+        return self.server.encoder.generate_success_string()
+
     def _handle_set_command(self, data, cmd, sock):
         key = cmd.data[0]
         value = cmd.data[1]
@@ -15,7 +18,7 @@ class CommandHandler:
             if expiry_command.upper() == "PX":
                 expiry_milliseconds = int(cmd.data[3])
         self.server.set_data(key, value, expiry_milliseconds)
-        return self.server.encoder.generate_success_string()
+        return self.get_set_success_response()
 
     def _handle_get_command(self, data, cmd, sock):
         key = cmd.data[0]
@@ -104,3 +107,8 @@ class CommandHandler:
             if response:
                 response_msg += response
         return response_msg
+
+
+class ClientCommandHandler(CommandHandler):
+    def get_set_success_response(self):
+        return self.server.encoder.generate_null_string()

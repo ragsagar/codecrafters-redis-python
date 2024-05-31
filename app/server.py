@@ -208,6 +208,7 @@ class MasterConnection:
         self.command_handler = command_handler
         self.encoder = Encoder()
         self.parser = RespParser()
+        self.handler = CommandHandler(server)
 
     def service_connection(self, key, mask):
         sock = key.fileobj
@@ -304,61 +305,9 @@ class MasterConnection:
                     )
                     sock.sendall(response)
 
-                # if self.state == MasterConnectionState.WAITING_FOR_PONG:
-                #     sock.sendall(self.encoder.generate_array_string(["PING"]))
-                # elif data.outb and self.state == MasterConnectionState.WAITING_FOR_PORT:
-                #     self.set_state(MasterConnectionState.WAITING_FOR_CAPA)
-                # elif data.outb and self.state == MasterConnectionState.WAITING_FOR_CAPA:
-                #     print("Sending capa to master")
-                #     sock.sendall(
-                #         self.encoder.generate_array_string(
-                #             ["REPLCONF", "capa", "psync2"]
-                #         )
-                #     )
-                #     self.set_state(MasterConnectionState.WAITING_FOR_PSYNC)
-                # elif (
-                #     data.outb and self.state == MasterConnectionState.WAITING_FOR_PSYNC
-                # ):
-                #     print("Sending replica id and offset to master")
-                #     sock.sendall(
-                #         self.encoder.generate_array_string(
-                #             ["PSYNC", self.replica_id, str(self.offset)]
-                #         )
-                #     )
-                #     self.set_state(MasterConnectionState.WAITING_FOR_FULLRESYNC)
-                #     self.log("Waiting for fullresync from master")
-                # elif (
-                #     data.outb
-                #     and self.state == MasterConnectionState.WAITING_FOR_FULLRESYNC
-                # ):
-                #     incoming = self.parse_message(data.outb)
-                #     self.log(f"Received message from master {incoming}")
-                #     if incoming.startswith("+FULLRESYNC"):
-                #         self.replica_id, self.offset = incoming.split(" ")[1:]
-                #         self.log(f"Replica id {self.replica_id} offset {self.offset}")
-                #         self.set_state(MasterConnectionState.WAITING_FOR_FILE)
-                #         self.log("waiting for file")
-                #     else:
-                #         raise MasterHandshakeException(
-                #             "Unexpected state, expected fullresync", incoming
-                #         )
-                # elif data.outb and self.state == MasterConnectionState.WAITING_FOR_FILE:
-                #     # incoming = self.parse_message(data.outb)
-                #     commands = self.parser.parse(data.outb)
-                #     self.log(
-                #         f"Received commands from master while waiting for file {commands}"
-                #     )
-                #     self.set_state(MasterConnectionState.READY)
-                # elif data.outb and self.state == MasterConnectionState.WAITING_FOR_ACK:
-                #     commands = self.parser.parse(data.outb)
-                #     self.log(f"Received commands from master {commands}")
-                #     command = commands[0]
-                #     if command.command == "REPLCONF" and command.data[0] == b"GETACK":
-                #         response = self.encoder.generate_array_string(
-                #             ["REPLCONF", "ACK", "0"]
-                #         )
-                #         sock.sendall(response)
-                #     self.set_state(MasterConnectionState.READY)
+            response = self.command_handler.handle_message(data, sock)
+            if response:
+                sock.sendall(response)
 
     def set_state(self, state):
         print(f"Changing state from {self.state} to {state}")
