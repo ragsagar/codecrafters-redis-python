@@ -52,7 +52,7 @@ class CommandHandler:
         return response_msg
 
     def _handle_info_command(self, data, cmd, sock):
-        if cmd.data[0].upper() == "REPLICATION":
+        if cmd.data[0].upper() == b"REPLICATION":
             response_msg = self.handle_replication_command(data, cmd, sock)
         else:
             response_msg = self.server.encoder.generate_bulkstring(
