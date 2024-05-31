@@ -322,3 +322,6 @@ class MasterConnection:
     def set_offset_and_replica(self, offset, replica_id):
         self.offset = offset
         self.replica_id = replica_id
+
+    def get_listening_port(self):
+        return self.listening_port
