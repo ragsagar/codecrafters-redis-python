@@ -61,7 +61,7 @@ class CommandHandler:
         return response_msg
 
     def _handle_echo_command(self, data, cmd, sock):
-        echo_message = " ".join(cmd.data)
+        echo_message = " ".join([i.decode() for i in cmd.data])
         response_msg = self.server.encoder.generate_bulkstring(echo_message)
         return response_msg
 
