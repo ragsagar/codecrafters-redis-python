@@ -87,7 +87,7 @@ class CommandHandler:
         return None
 
     def _handle_wait_command(self, data, cmd, sock):
-        return self.encoder.generate_integer_string(7)
+        return self.encoder.generate_integer_string(self.server.get_replica_count())
 
     def parse_message(self, message):
         commands = self.parser.parse(message)
