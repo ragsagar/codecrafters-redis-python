@@ -53,9 +53,7 @@ class RedisServer:
             map_store={},
             master_connection=True,
         )
-        self.master_connection = MasterConnection(
-            self, self.port, master_sock, self.command_handler
-        )
+        self.master_connection = MasterConnection(self, self.port, master_sock)
         sel.register(master_sock, events, data=data)
 
     def setup_as_master(self):
@@ -201,14 +199,13 @@ class MasterConnection:
     offset = -1
     offset_count = 0
 
-    def __init__(self, server, listening_port, socket, command_handler):
+    def __init__(self, server, listening_port, socket):
         self.server = server
         self.listening_port = listening_port
         self.socket = socket
-        self.command_handler = command_handler
         self.encoder = Encoder()
         self.parser = RespParser()
-        self.handler = ClientCommandHandler(server, self)
+        self.command_handler = ClientCommandHandler(server, self)
 
     def service_connection(self, key, mask):
         sock = key.fileobj
