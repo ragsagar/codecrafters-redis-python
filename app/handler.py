@@ -185,7 +185,7 @@ class ClientCommandHandler(CommandHandler):
         if self.state == self.State.RECORD_OFFSET:
             self.offset_count += command.get_size()
             print(
-                f"Incremented offset count to {self.offset_count} Last message: ${command}, length: {len(message)}"
+                f"Incremented offset count to {self.offset_count} Last message: ${command}, length: {len(command.get_size())}"
             )
 
     def handle_message(self, data, sock):
