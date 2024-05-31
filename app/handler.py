@@ -21,7 +21,7 @@ class CommandHandler:
         if len(cmd.data) > 2:
             expiry_command = cmd.data[2]
             if expiry_command.upper() == "PX":
-                expiry_milliseconds = int(cmd.data[3])
+                expiry_milliseconds = int(cmd.data[3].decode())
         self.server.set_data(key.decode(), value.decode(), expiry_milliseconds)
         return self.get_set_success_response()
 
