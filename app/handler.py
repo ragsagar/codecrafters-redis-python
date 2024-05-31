@@ -78,13 +78,16 @@ class CommandHandler:
             f"FULLRESYNC {self.server.get_replid()} {self.server.get_repl_offset()}"
         )
         resync_message = self.server.encoder.generate_simple_string(resync_string)
-        file_message = self.server.encoder.generate_file_string(
+        file_message = self.encoder.generate_file_string(
             self.server.get_rdb_file_contents()
         )
         return resync_message + file_message
 
     def _handle_ok_command(self, data, cmd, sock):
         return None
+
+    def _handle_wait_command(self, data, cmd, sock):
+        return self.encoder.generate_simple_string("0")
 
     def parse_message(self, message):
         commands = self.parser.parse(message)
