@@ -12,7 +12,7 @@ class CommandHandler:
         self.encoder = Encoder()
 
     def get_set_success_response(self):
-        return self.server.encoder.generate_success_string()
+        return self.encoder.generate_success_string()
 
     def _handle_set_command(self, data, cmd, sock):
         key = cmd.data[0]
@@ -122,6 +122,7 @@ class ClientCommandHandler(CommandHandler):
         READY = 7
 
     state = State.WAITING_FOR_PONG
+    offset_count = 0
 
     def _handle_pong_command(self, data, cmd, sock):
         if self.state == self.State.WAITING_FOR_PONG:
@@ -166,13 +167,21 @@ class ClientCommandHandler(CommandHandler):
         # Possible commads: listening-port, capa during handshake
         # GETACK periodically.
         if cmd.data[0] == b"GETACK":
-            return self.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
+            print("Sending offset count", self.offset_count)
+            return self.encoder.generate_array_string(
+                ["REPLCONF", "ACK", str(self.offset_count)]
+            )
         return super()._handle_replconf_command(data, cmd, sock)
 
     def get_set_success_response(self):
         return self.encoder.generate_null_string()
 
+    def increment_offset(self, message):
+        if self.state == self.State.READY:
+            self.offset_count += len(message)
+
     def handle_message(self, data, sock):
+        self.increment_offset(data.outb)
         commands = self.parse_message(data.outb)
         print("Commands found in handler", commands)
         response_msg = b""
