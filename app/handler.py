@@ -99,6 +99,7 @@ class CommandHandler:
         timeout = int(cmd.data[1].decode())
         print("Min required", min_required, "Timeout", timeout)
         self.server.add_waiter(sock, min_required, timeout)
+        self.server.check_with_replicas()
         # return self.encoder.generate_integer_string(self.server.get_replica_count())
         return None
 

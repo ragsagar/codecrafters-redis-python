@@ -204,6 +204,10 @@ class RedisServer:
         else:
             self.log("Received offset from unknown replica", sock.addr)
 
+    def check_with_replicas(self):
+        for replica in self.replicas:
+            replica.check_processed()
+
     def sendall(self, message, sock):
         print(f"Sending message {message}")
         sock.sendall(message)
