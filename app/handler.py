@@ -126,7 +126,7 @@ class ClientCommandHandler(CommandHandler):
     def _handle_pong_command(self, data, cmd, sock):
         if self.state == self.State.WAITING_FOR_PONG:
             self.state = self.State.WAITING_FOR_PORT_RESPONSE
-            return self.server.encoder.generate_array_string(
+            return self.encoder.generate_array_string(
                 [
                     "REPLCONF",
                     "listening-port",
@@ -138,9 +138,7 @@ class ClientCommandHandler(CommandHandler):
     def _handle_ok_command(self, data, cmd, sock):
         if self.state == self.State.WAITING_FOR_PORT_RESPONSE:
             self.state = self.State.WAITING_FOR_CAPA_RESPONSE
-            return self.server.encoder.generate_array_string(
-                ["REPLCONF", "capa", "psync2"]
-            )
+            return self.encoder.generate_array_string(["REPLCONF", "capa", "psync2"])
         elif self.state == self.State.WAITING_FOR_CAPA_RESPONSE:
             self.state = self.State.WAITING_FOR_FULLRESYNC
             return self.encoder.generate_array_string(
@@ -168,7 +166,7 @@ class ClientCommandHandler(CommandHandler):
         # Possible commads: listening-port, capa during handshake
         # GETACK periodically.
         if cmd.data[0] == b"GETACK":
-            return self.server.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
+            return self.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
         return super()._handle_replconf_command(data, cmd, sock)
 
     def get_set_success_response(self):
