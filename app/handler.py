@@ -146,8 +146,8 @@ class ClientCommandHandler(CommandHandler):
             return self.encoder.generate_array_string(
                 [
                     "PSYNC",
-                    self.connection.get_replica_id(),
-                    self.connection.get_offset(),
+                    str(self.connection.get_replica_id()),
+                    str(self.connection.get_offset()),
                 ]
             )
         return super()._handle_ok_command(data, cmd, sock)
