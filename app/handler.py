@@ -26,7 +26,7 @@ class CommandHandler:
         return self.get_set_success_response()
 
     def _handle_get_command(self, data, cmd, sock):
-        key = cmd.data[0]
+        key = cmd.data[0].decode()
         value = self.server.get_data(key)
         print(f"Getting value for key {key}", value)
         if value:
