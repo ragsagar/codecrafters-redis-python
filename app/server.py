@@ -220,20 +220,6 @@ class MasterConnection:
                 sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
-            # if self.state != MasterConnectionState.READY:
-            #     self.do_handshake(data, sock)
-            # elif data.outb and self.state == MasterConnectionState.READY:
-            #     # commands = self.parser.parse(data.outb)
-            #     # for command in commands:
-            #     #     response = self.command_handler.handle_message(data, sock)
-            #     #     if response:
-            #     #         print("Sending", response)
-            #     #         sock.sendall(response)
-            #     # self.log("Expired data")
-            #     response = self.command_handler.handle_message(data, sock)
-            #     if response:
-            #         print("Sending", response)
-            #         sock.sendall(response)
             self.handle_incoming_data(data, sock)
             data.outb = b""
 
@@ -325,3 +311,9 @@ class MasterConnection:
 
     def get_listening_port(self):
         return self.listening_port
+
+    def get_replica_id(self):
+        return self.replica_id
+
+    def get_offset(self):
+        return self.offset_count

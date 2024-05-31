@@ -139,11 +139,17 @@ class ClientCommandHandler(CommandHandler):
         if self.state == self.State.WAITING_FOR_PORT_RESPONSE:
             self.state = self.State.WAITING_FOR_CAPA_RESPONSE
             return self.server.encoder.generate_array_string(
-                ["REPLCONF", "capa", "eof"]
+                ["REPLCONF", "capa", "psync2"]
             )
         elif self.state == self.State.WAITING_FOR_CAPA_RESPONSE:
             self.state = self.State.WAITING_FOR_FULLRESYNC
-            return self.server.encoder.generate_null_string()
+            return self.encoder.generate_array_string(
+                [
+                    "PSYNC",
+                    self.connection.get_replica_id(),
+                    self.connection.get_offset(),
+                ]
+            )
         return super()._handle_ok_command(data, cmd, sock)
 
     def _handle_fullresync_command(self, data, cmd, sock):
