@@ -28,6 +28,7 @@ class KeyValueStore:
                 del self.data[key]
 
     def get(self, key):
+        self.expire_data()
         if key not in self.data:
             return None
         return self.data[key]["value"]
