@@ -25,4 +25,4 @@ class Encoder:
         return f"${len(byte_contents)}\r\n".encode() + byte_contents
 
     def generate_double_string(self, num):
-        return f",{num}\r\n".encode()
+        return f":{num}\r\n".encode()
