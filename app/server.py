@@ -160,6 +160,11 @@ class RedisServer:
                 data.outb = b""
                 self.expire_data()
 
+    def close_connection(self, sock):
+        sel.unregister(sock)
+        sock.close()
+        self.log("Closed connection")
+
     def replicate_if_required(self, data, command):
         if self.is_write_command(command):
             for replica in self.replicas:

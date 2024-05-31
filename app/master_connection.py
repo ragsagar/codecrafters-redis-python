@@ -1,5 +1,3 @@
-import selectors
-
 from .handler import ClientCommandHandler
 from .encoder import Encoder
 from .parser import RespParser
@@ -32,8 +30,7 @@ class MasterConnection:
                 self.log("Received", repr(recv_data), "from", data.addr)
             else:
                 self.log("Closing connection to", data.addr)
-                sel.unregister(sock)
-                sock.close()
+                self.server.close_connection(sock)
         if mask & selectors.EVENT_WRITE:
             self.handle_incoming_data(data, sock)
             data.outb = b""
