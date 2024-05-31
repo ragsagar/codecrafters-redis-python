@@ -190,7 +190,6 @@ class ClientCommandHandler(CommandHandler):
             print(f"Last message: ${message}, length: {len(message)}")
 
     def handle_message(self, data, sock):
-        self.increment_offset(data.outb)
         commands = self.parse_message(data.outb)
         print("Commands found in handler", commands)
         response_msg = b""
@@ -198,4 +197,5 @@ class ClientCommandHandler(CommandHandler):
             response = self.handle_single_command(data, command, sock)
             if response:
                 response_msg += response
+        self.increment_offset(data.outb)
         return response_msg
