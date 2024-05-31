@@ -32,7 +32,7 @@ class Replica:
     def check_processed(self):
         print("Checking if replica is processed")
         self.send_message(
-            self.encoder.generate_array_string(["REPLCONF", "GETACK", "0"])
+            self.encoder.generate_array_string(["REPLCONF", "GETACK", "*"])
         )
 
     def update_processed(self, offset_count):
