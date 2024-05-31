@@ -147,7 +147,7 @@ class ClientCommandHandler(CommandHandler):
                 [
                     "PSYNC",
                     str(self.connection.get_replica_id()),
-                    str(self.connection.get_offset()),
+                    str(-1),
                 ]
             )
         return super()._handle_ok_command(data, cmd, sock)
