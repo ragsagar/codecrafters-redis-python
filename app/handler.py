@@ -157,7 +157,6 @@ class ClientCommandHandler(CommandHandler):
             replica_id, offset = cmd.data
             self.connection.set_offset_and_replica(offset.decode(), replica_id.decode())
             self.state = self.State.WAITING_FOR_FILE
-            return self.server.encoder.generate_simple_string("ACK")
         return None
 
     def _handle_rdb_command(self, data, cmd, sock):
