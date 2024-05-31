@@ -67,7 +67,7 @@ class CommandHandler:
         print("Received replconf command", cmd)
         # Possible commads: listening-port, capa during handshake
         # GETACK periodically.
-        if cmd.data[0].upper() == b"GETACK":
+        if cmd.data[0] == b"GETACK":
             # self.server.set_repl_ack()
             return self.server.encoder.generate_array_string(["REPLCONF", "ACK", "0"])
         return self.server.encoder.generate_success_string()
