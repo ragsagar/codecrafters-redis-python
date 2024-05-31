@@ -173,6 +173,9 @@ class RedisServer:
             for replica in self.replicas:
                 replica.send_message(data.outb)
 
+    def processed_replicas(self):
+        return sum([1 for i in self.replicas if i.is_processed()])
+
     def sendall(self, message, sock):
         print(f"Sending message {message}")
         sock.sendall(message)

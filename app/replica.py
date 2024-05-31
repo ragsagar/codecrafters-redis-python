@@ -17,10 +17,11 @@ class Replica:
         self.offset = offset
         self.replid = replica_id
         self.encoder = Encoder()
+        self.processed = False
 
     def send_message(self, message):
         print(f"Syncing with replica {self.addr}", message)
         self.socket.sendall(message)
 
-    def service_connection(self):
-        pass
+    def is_processed(self):
+        return self.processed
