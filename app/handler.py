@@ -163,6 +163,7 @@ class ClientCommandHandler(CommandHandler):
 
     def _handle_rdb_command(self, data, cmd, sock):
         print("Received RDB file", cmd.data[0])
+        self.state = self.STATE.READY
         return None
 
     def _handle_replconf_command(self, data, cmd, sock):
