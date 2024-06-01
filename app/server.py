@@ -173,7 +173,7 @@ class RedisServer:
     def replicate_if_required(self, data, command):
         if self.is_write_command(command):
             for replica in self.replicas:
-                replica.send_message(data.outb)
+                replica.send_write_command(data.outb)
         self.check_if_client_waiting()
 
     def check_if_client_waiting(self):
