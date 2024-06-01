@@ -180,7 +180,12 @@ class RedisServer:
 
     def check_if_client_waiting(self):
         processed_replicas = self.processed_replicas()
+        if self.waiting_clients:
+            print(f"Client waiting for WAIT command: {len(self.waiting_clients)}")
         for index, (sock, min_count, expiry_time) in enumerate(self.waiting_clients):
+            print(
+                f"Processed replicas: f{processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
+            )
             if (
                 processed_replicas >= min_count
                 or expiry_time <= datetime.datetime.now()
