@@ -212,7 +212,7 @@ class RedisServer:
 
     def sendall(self, message, sock):
         if message == b"+OK\r\n":
-            traceback.print_stack(limit=5)
+            traceback.print_stack(limit=10)
         print(f"Sending message {message}")
         sock.sendall(message)
 
