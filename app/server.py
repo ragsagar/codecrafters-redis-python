@@ -1,3 +1,4 @@
+import traceback
 import datetime
 import socket
 import selectors
@@ -210,6 +211,8 @@ class RedisServer:
             replica.check_processed()
 
     def sendall(self, message, sock):
+        if message == b"+OK\r\n":
+            traceback.print_last(5)
         print(f"Sending message {message}")
         sock.sendall(message)
 
