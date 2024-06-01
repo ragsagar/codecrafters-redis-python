@@ -77,6 +77,7 @@ class CommandHandler:
         if cmd.data[0] == b"ACK":
             offset_count = int(cmd.data[1].decode())
             self.server.received_replica_offset(offset_count, sock)
+            return None
         return self.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):
