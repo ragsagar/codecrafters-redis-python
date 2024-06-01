@@ -211,9 +211,6 @@ class RedisServer:
             replica.check_processed()
 
     def sendall(self, message, sock):
-        if message == b"+OK\r\n":
-            print("Socket", sock)
-            traceback.print_stack(limit=10)
         print(f"Sending message {message}")
         sock.sendall(message)
 

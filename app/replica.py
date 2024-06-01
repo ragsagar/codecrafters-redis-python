@@ -36,7 +36,7 @@ class Replica:
         )
 
     def update_processed(self, offset_count):
-        if self.sent_count == offset_count:
+        if self.sent_count <= offset_count:
             self.processed = True
         else:
             self.processed = False
