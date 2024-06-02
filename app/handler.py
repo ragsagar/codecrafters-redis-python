@@ -111,7 +111,7 @@ class CommandHandler:
     def handle_single_command(self, data, command, sock):
         handler_func = getattr(self, f"_handle_{command.command.lower()}_command", None)
         if not handler_func:
-            response_msg = self.server.encoder.generate_bulkstring("Unknown command")
+            response_msg = self.encoder.generate_bulkstring("Unknown command")
         else:
             response_msg = handler_func(data, command, sock)
         return response_msg
