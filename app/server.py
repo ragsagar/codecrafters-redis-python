@@ -99,8 +99,7 @@ class RedisServer:
         self.replicas.append(replica)
 
     def is_write_command(self, command):
-        print("Lower command", command.command.lower())
-        return command.command.lower() in [b"set", b"del"]
+        return command.command in ["SET", "DEL"]
 
     def get_rdb_file_contents(self):
         # hex_data = open("sample_file.rdb").read()
