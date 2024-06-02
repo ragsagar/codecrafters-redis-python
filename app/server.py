@@ -26,6 +26,7 @@ class RedisServer:
     master_connection = None
     store = None
     waiting_clients = []
+    last_processed = 0
 
     def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
         self.port = port
@@ -175,12 +176,18 @@ class RedisServer:
 
     def check_if_client_waiting(self):
         processed_replicas = self.processed_replicas()
+        print_debug = False
         if self.waiting_clients:
-            print(f"Client waiting for WAIT command: {len(self.waiting_clients)}")
+            if processed_replicas != self.last_processed:
+                self.last_processed = processed_replicas
+                print_debug = True
+                print("Processed replicas count changed, checking with clients")
+                print(f"Client waiting for WAIT command: {len(self.waiting_clients)}")
         for index, (sock, min_count, expiry_time) in enumerate(self.waiting_clients):
-            print(
-                f"Processed replicas count: {processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
-            )
+            if print_debug:
+                print(
+                    f"Processed replicas count: {processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
+                )
             if (
                 processed_replicas >= min_count
                 or expiry_time <= datetime.datetime.now()
