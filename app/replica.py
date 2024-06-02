@@ -21,9 +21,9 @@ class Replica:
         self.sent_count = 0
 
     def send_write_command(self, message):
-        self.send_message(message)
         self.processed = False
         self.sent_count += len(message)
+        self.send_message(message)
 
     def send_message(self, message):
         print(f"Syncing with replica {self.addr}", message)

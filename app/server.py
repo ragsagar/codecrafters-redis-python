@@ -162,6 +162,7 @@ class RedisServer:
                 if response_msg:
                     self.sendall(response_msg, sock)
                 data.outb = b""
+                self.expire_data()
             self.periodic_checks()
 
     def close_connection(self, sock):
@@ -171,7 +172,6 @@ class RedisServer:
 
     def periodic_checks(self):
         self.check_if_client_waiting()
-        self.expire_data()
 
     def check_if_client_waiting(self):
         processed_replicas = self.processed_replicas()
