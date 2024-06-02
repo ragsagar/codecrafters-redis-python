@@ -14,6 +14,9 @@ class DummyServer:
     def set_data(self, key, value, expiry):
         pass
 
+    def is_write_command(self, command):
+        return False
+
 
 class TestCommandHandler(unittest.TestCase):
 

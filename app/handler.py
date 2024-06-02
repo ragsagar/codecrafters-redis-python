@@ -119,7 +119,7 @@ class CommandHandler:
     def replicate_if_required(self, command):
         if self.server.is_write_command(command):
             for replica in self.server.replicas:
-                replica.send_write_command(command)
+                replica.send_write_command(command.get_raw())
 
     def handle_message(self, data, sock):
         commands = self.parse_message(data.outb)

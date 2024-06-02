@@ -89,3 +89,13 @@ class TestRespParser(unittest.TestCase):
         msg = b"*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"
         resp = RespParser().parse(msg)
         self.assertEqual(resp[0].get_size(), 37)
+
+    def test_set_raw_message(self):
+        msg = b"*3\r\n$3\r\nSET\r\n$9\r\nblueberry\r\n$6\r\norange\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(resp[0].get_raw(), msg)
+
+    def test_get_raw_command(self):
+        msg = b"*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"
+        resp = RespParser().parse(msg)
+        self.assertEqual(resp[0].get_raw(), msg)

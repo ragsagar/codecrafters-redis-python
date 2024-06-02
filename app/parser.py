@@ -70,12 +70,14 @@ class RespParser:
                 cursor, command = self.read_command(message, cursor, part_length)
                 size = cursor - cursor_start + 2  # 2 for \r\n
                 command.set_size(size)
+                command.set_raw(b"".join(message[cursor_start : cursor + 2]))
                 commands.append(command)
                 cursor += 1
             elif message[cursor] == b"+":
                 cursor, string = self.read_pending_bytes(message, cursor + 1)
                 parts = string.split()
-                commands.append(Command(parts[0].decode(), data=parts[1:]))
+                command = Command(parts[0].decode(), data=parts[1:])
+                commands.append(command)
                 cursor += 1
             elif message[cursor] == b"$":
                 cursor, data_length = self.read_number(message, cursor + 1)
@@ -108,6 +110,7 @@ class Command:
         else:
             self.data = []
         self.size = size
+        self.raw = b""
 
     def add_data(self, data):
         self.data.append(data)
@@ -117,6 +120,12 @@ class Command:
 
     def set_size(self, size):
         self.size = size
+
+    def set_raw(self, raw):
+        self.raw = raw
+
+    def get_raw(self):
+        return self.raw
 
     def __str__(self):
         return f"{self.command} {self.data}"
