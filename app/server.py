@@ -216,7 +216,7 @@ class RedisServer:
             replica.check_processed()
 
     def sendall(self, message, sock):
-        print(f"Sending message {message} to", sock.addr)
+        print(f"Sending message {message} to", sock.getpeername())
         sock.sendall(message)
 
     def run(self):
