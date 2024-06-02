@@ -27,6 +27,7 @@ class RedisServer:
     store = None
     waiting_clients = []
     last_processed = 0
+    replicas = []
 
     def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
         self.port = port
