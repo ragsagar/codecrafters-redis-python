@@ -99,7 +99,7 @@ class RedisServer:
         self.replicas.append(replica)
 
     def is_write_command(self, command):
-        return command in ["set", "del"]
+        return command in [b"set", b"del"]
 
     def get_rdb_file_contents(self):
         # hex_data = open("sample_file.rdb").read()
@@ -158,26 +158,20 @@ class RedisServer:
                 sock.close()
         if mask & selectors.EVENT_WRITE:
             if data.outb:
-                incoming = self.parse_message(data.outb)
-                command = incoming[0].lower()
                 response_msg = self.command_handler.handle_message(data, sock)
-                self.replicate_if_required(data, command)
                 if response_msg:
                     self.sendall(response_msg, sock)
                 data.outb = b""
-                self.expire_data()
+            self.periodic_checks()
 
     def close_connection(self, sock):
         sel.unregister(sock)
         sock.close()
         self.log("Closed connection")
 
-    def replicate_if_required(self, data, command):
-        if self.is_write_command(command):
-            for replica in self.replicas:
-                # Write command
-                replica.send_write_command(data.outb)
+    def periodic_checks(self):
         self.check_if_client_waiting()
+        self.expire_data()
 
     def check_if_client_waiting(self):
         processed_replicas = self.processed_replicas()
