@@ -162,7 +162,8 @@ class RedisServer:
                 command = incoming[0].lower()
                 response_msg = self.command_handler.handle_message(data, sock)
                 self.replicate_if_required(data, command)
-                self.sendall(response_msg, sock)
+                if response_msg:
+                    self.sendall(response_msg, sock)
                 data.outb = b""
                 self.expire_data()
 
