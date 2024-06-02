@@ -209,7 +209,7 @@ class RedisServer:
             replica.update_processed(offset_count)
             self.log(f"Replica {replica.addr} processed {offset_count} commands")
         else:
-            self.log("Received offset from unknown replica", sock.addr)
+            self.log("Received offset from unknown replica", sock.getpeername())
 
     def check_with_replicas(self):
         for replica in self.replicas:
