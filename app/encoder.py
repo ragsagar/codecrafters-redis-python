@@ -9,6 +9,8 @@ class Encoder:
         return "".join([self._construct_line(message) for message in messages]).encode()
 
     def generate_array_string(self, messages):
+        if not messages:
+            return b"*0\r\n"
         return f"*{len(messages)}\r\n{''.join([self._construct_line(message) for message in messages])}".encode()
 
     def generate_null_string(self):

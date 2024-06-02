@@ -43,8 +43,8 @@ class RedisServer:
         self.encoder = Encoder()
         self.master_server = master_server
         self.master_port = int(master_port) if master_port else None
-        self.command_handler = CommandHandler(self)
         self.store = KeyValueStore()
+        self.command_handler = CommandHandler(self, store=self.store)
         self.rdb_dir = rdb_dir
         self.rdb_filename = rdb_filename
         if master_server:

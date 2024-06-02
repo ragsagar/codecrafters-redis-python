@@ -6,8 +6,9 @@ from .encoder import Encoder
 
 
 class CommandHandler:
-    def __init__(self, server, connection=None):
+    def __init__(self, server, store, connection=None):
         self.server = server
+        self.store = store
         self.parser = RespParser()
         self.connection = connection
         self.encoder = Encoder()
@@ -16,14 +17,19 @@ class CommandHandler:
         return self.encoder.generate_success_string()
 
     def _handle_config_command(self, data, cmd, sock):
-        data = cmd.get_decoded_data()
-        if data[0].upper() == "GET":
-            if data[1].upper() == "DIR":
+        cmd_data = cmd.get_decoded_data()
+        if cmd_data[0].upper() == "GET":
+            if cmd_data[1].upper() == "DIR":
                 response = ["dir", self.server.get_rdb_dir()]
                 return self.encoder.generate_array_string(response)
-            elif data[1].upper() == "DBFILENAME":
+            elif cmd_data[1].upper() == "DBFILENAME":
                 response = ["dbfilename", self.server.get_rdb_filename()]
                 return self.encoder.generate_array_string(response)
+        return None
+
+    def _handle_keys_command(self, data, cmd, sock):
+        if cmd.data[0] == b"*":
+            return self.encoder.generate_array_string(self.store.get_keys())
         return None
 
     def _handle_set_command(self, data, cmd, sock):
@@ -80,11 +86,7 @@ class CommandHandler:
     def _handle_ping_command(self, data, cmd, sock):
         return self.server.encoder.generate_bulkstring("PONG")
 
-    # def _handle_replconf_command(self, data, cmd, sock):
-    #     return self.server.encoder.generate_success_string()
-
     def _handle_replconf_command(self, data, cmd, sock):
-        print("Received replconf command on master, ", cmd)
         if cmd.data[0] == b"ACK":
             offset_count = int(cmd.data[1].decode())
             self.server.received_replica_offset(offset_count, sock)
@@ -92,7 +94,6 @@ class CommandHandler:
         return self.encoder.generate_success_string()
 
     def _handle_psync_command(self, data, cmd, sock):
-        print("Received psync command", cmd)
         self.server.add_replica(data.addr, cmd.data[0], cmd.data[1], sock)
         resync_string = (
             f"FULLRESYNC {self.server.get_replid()} {self.server.get_repl_offset()}"
@@ -112,7 +113,6 @@ class CommandHandler:
         print("Min required", min_required, "Timeout", timeout)
         self.server.add_waiter(sock, min_required, timeout)
         self.server.check_with_replicas()
-        # return self.encoder.generate_integer_string(self.server.get_replica_count())
         return None
 
     def parse_message(self, message):

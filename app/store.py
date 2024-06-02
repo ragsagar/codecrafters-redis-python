@@ -32,3 +32,6 @@ class KeyValueStore:
         if key not in self.data:
             return None
         return self.data[key]["value"]
+
+    def get_keys(self):
+        return list(self.data.keys())

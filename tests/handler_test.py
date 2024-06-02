@@ -3,6 +3,7 @@ from collections import namedtuple
 
 from app.handler import CommandHandler
 from app.encoder import Encoder
+from app.store import KeyValueStore
 
 DataBuffer = namedtuple("DataBuffer", ["outb"])
 
@@ -27,7 +28,8 @@ class DummyServer:
 class TestCommandHandler(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.handler = CommandHandler(DummyServer())
+        self.store = KeyValueStore()
+        self.handler = CommandHandler(DummyServer(), store=self.store)
         self.sock = None
 
     def create_data(self, msg):
@@ -62,3 +64,14 @@ class TestCommandHandler(unittest.TestCase):
         msg = b"*3\r\n$6\r\nCONFIG\r\n$3\r\nGET\r\n$10\r\ndbfilename\r\n"
         res = self.handler.handle_message(self.create_data(msg), self.sock)
         self.assertEqual(res, b"*2\r\n$10\r\ndbfilename\r\n$7\r\nrdbfile\r\n")
+
+    def test_handle_empty_keys(self):
+        msg = b"*2\r\n$4\r\nKEYS\r\n$1\r\n*\r\n"
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        self.assertEqual(res, b"*0\r\n")
+
+    def test_handle_keys(self):
+        msg = b"*2\r\n$4\r\nKEYS\r\n$1\r\n*\r\n"
+        self.store.set("foo", "bar")
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        self.assertEqual(res, b"*1\r\n$3\r\nfoo\r\n")
