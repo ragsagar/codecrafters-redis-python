@@ -116,11 +116,17 @@ class CommandHandler:
             response_msg = handler_func(data, command, sock)
         return response_msg
 
+    def replicate_if_required(self, command):
+        if command.command.lower() in self.server.write_commands:
+            for replica in self.server.replicas:
+                replica.send_write_command(command)
+
     def handle_message(self, data, sock):
         commands = self.parse_message(data.outb)
         print("Commands found in handler", commands)
         response_msg = b""
         for command in commands:
+            self.replicate_if_required(command)
             response = self.handle_single_command(data, command, sock)
             if response:
                 response_msg += response
