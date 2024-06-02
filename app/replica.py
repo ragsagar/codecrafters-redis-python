@@ -17,7 +17,7 @@ class Replica:
         self.offset = offset
         self.replid = replica_id
         self.encoder = Encoder()
-        self.processed = True
+        self.processed = False
         self.sent_count = 0
 
     def send_write_command(self, message):
