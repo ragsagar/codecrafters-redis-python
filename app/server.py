@@ -184,7 +184,7 @@ class RedisServer:
             print(f"Client waiting for WAIT command: {len(self.waiting_clients)}")
         for index, (sock, min_count, expiry_time) in enumerate(self.waiting_clients):
             print(
-                f"Processed replicas: f{processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
+                f"Processed replicas count: {processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
             )
             if (
                 processed_replicas >= min_count
@@ -216,7 +216,7 @@ class RedisServer:
             replica.check_processed()
 
     def sendall(self, message, sock):
-        print(f"Sending message {message}")
+        print(f"Sending message {message} to", sock)
         sock.sendall(message)
 
     def run(self):
