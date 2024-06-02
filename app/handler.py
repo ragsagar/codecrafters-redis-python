@@ -15,6 +15,17 @@ class CommandHandler:
     def get_set_success_response(self):
         return self.encoder.generate_success_string()
 
+    def _handle_config_command(self, data, cmd, sock):
+        data = cmd.get_decoded_data()
+        if data[0].upper() == "GET":
+            if data[1].upper() == "DIR":
+                response = ["dir", self.server.get_rdb_dir()]
+                return self.encoder.generate_array_string(response)
+            elif data[1].upper() == "DBFILENAME":
+                response = ["dbfilename", self.server.get_rdb_filename()]
+                return self.encoder.generate_array_string(response)
+        return None
+
     def _handle_set_command(self, data, cmd, sock):
         key = cmd.data[0]
         value = cmd.data[1]

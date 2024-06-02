@@ -127,6 +127,9 @@ class Command:
     def get_raw(self):
         return self.raw
 
+    def get_decoded_data(self):
+        return [i.decode() for i in self.data]
+
     def __str__(self):
         return f"{self.command} {self.data}"
 

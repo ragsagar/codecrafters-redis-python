@@ -29,7 +29,15 @@ class RedisServer:
     last_processed = 0
     replicas = []
 
-    def __init__(self, port=6379, master_server=None, master_port=None, debug=True):
+    def __init__(
+        self,
+        port=6379,
+        master_server=None,
+        master_port=None,
+        rdb_dir=None,
+        rdb_filename=None,
+        debug=True,
+    ):
         self.port = port
         self.server_socket = None
         self.encoder = Encoder()
@@ -37,6 +45,8 @@ class RedisServer:
         self.master_port = int(master_port) if master_port else None
         self.command_handler = CommandHandler(self)
         self.store = KeyValueStore()
+        self.rdb_dir = rdb_dir
+        self.rdb_filename = rdb_filename
         if master_server:
             self.setup_as_slave()
         else:
@@ -64,6 +74,12 @@ class RedisServer:
         self.repl_id = generate_repl_id()
         self.repl_offset = 0
         self.replicas = []
+
+    def get_rdb_dir(self):
+        return self.rdb_dir
+
+    def get_rdb_filename(self):
+        return self.rdb_filename
 
     def get_server_type(self):
         return self.server_type

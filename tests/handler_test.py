@@ -17,6 +17,12 @@ class DummyServer:
     def is_write_command(self, command):
         return False
 
+    def get_rdb_dir(self):
+        return "/tmp/redis-files"
+
+    def get_rdb_filename(self):
+        return "rdbfile"
+
 
 class TestCommandHandler(unittest.TestCase):
 
@@ -46,3 +52,13 @@ class TestCommandHandler(unittest.TestCase):
         msg = b"+OK\r\n"
         res = self.handler.handle_message(self.create_data(msg), self.sock)
         self.assertEqual(res, b"")
+
+    def test_handle_config_dir(self):
+        msg = b"*3\r\n$6\r\nCONFIG\r\n$3\r\nGET\r\n$3\r\ndir\r\n"
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        self.assertEqual(res, b"*2\r\n$3\r\ndir\r\n$16\r\n/tmp/redis-files\r\n")
+
+    def test_handle_config_rdbfile(self):
+        msg = b"*3\r\n$6\r\nCONFIG\r\n$3\r\nGET\r\n$10\r\ndbfilename\r\n"
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        self.assertEqual(res, b"*2\r\n$10\r\ndbfilename\r\n$7\r\nrdbfile\r\n")

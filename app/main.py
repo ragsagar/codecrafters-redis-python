@@ -1,3 +1,4 @@
+import argparse
 from .server import RedisServer
 
 DEFAULT_PORT = 6379
@@ -5,7 +6,6 @@ DEFAULT_PORT = 6379
 
 def main():
     print("Logs from your program will appear here!")
-    import argparse
 
     parser = argparse.ArgumentParser(description="Redis server")
     parser.add_argument("--port", type=int, help="Port to run the server on")
@@ -13,6 +13,8 @@ def main():
     parser.add_argument(
         "--replicaof", type=str, help="Replicate data from another server"
     )
+    parser.add_argument("--dir", type=str, help="Directory where rdb file is stored.")
+    parser.add_argument("--dbfilename", type=str, help="Name of the rdb file.")
     args = parser.parse_args()
     replicate_server = args.replicaof.split(" ") if args.replicaof else []
     print("Replicate server", replicate_server)
@@ -20,7 +22,13 @@ def main():
         run_test()
         return
     port = args.port if args.port else DEFAULT_PORT
-    server = RedisServer(port, debug=True, *replicate_server)
+    server = RedisServer(
+        port,
+        debug=True,
+        rdb_dir=args.dir,
+        rdb_filename=args.dbfilename,
+        *replicate_server,
+    )
     server.run()
 
 
