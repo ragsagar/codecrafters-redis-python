@@ -117,7 +117,7 @@ class CommandHandler:
         return response_msg
 
     def replicate_if_required(self, command):
-        if command.command.lower() in self.server.write_commands:
+        if self.server.is_write_command(command):
             for replica in self.server.replicas:
                 replica.send_write_command(command)
 
