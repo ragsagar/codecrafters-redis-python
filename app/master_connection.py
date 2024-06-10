@@ -19,7 +19,7 @@ class MasterConnection:
         self.socket = socket
         self.encoder = Encoder()
         self.parser = RespParser()
-        self.command_handler = ClientCommandHandler(server, self, store=server.store)
+        self.command_handler = ClientCommandHandler(server, server.store, self)
 
     def service_connection(self, key, mask):
         sock = key.fileobj
