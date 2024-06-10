@@ -15,6 +15,12 @@ class KeyValueStore:
             expiry_time = datetime.datetime.now() + datetime.timedelta(
                 milliseconds=expiry_milliseconds
             )
+        self.set_with_expiry_time(key, value, expiry_time)
+
+    def set_with_expiry_time(self, key, value, expiry_time):
+        if expiry_time:
+            if expiry_time < datetime.datetime.now():
+                return
         self.data[key] = {
             "value": value,
             "expiry_time": expiry_time,
@@ -36,8 +42,15 @@ class KeyValueStore:
     def get_keys(self):
         return list(self.data.keys())
 
+    def get_time_from_epoch(self, epoch):
+        expiry_time = datetime.datetime.fromtimestamp(epoch / 1000)
+        return expiry_time
+
     def load_data_from_rdb(self, rdb):
         for db in rdb.data.values():
             for kv in db:
                 print("KV", kv)
-                self.set(kv.key, kv.value, kv.expiry)
+                expiry = None
+                if kv.expiry:
+                    expiry = self.get_time_from_epoch(kv.expiry)
+                self.set_with_expiry_time(kv.key, kv.value, expiry)

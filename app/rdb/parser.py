@@ -215,3 +215,6 @@ class KeyValue:
         self.key = key
         self.value = value
         self.data_type = data_type
+
+    def __str__(self):
+        return f"<KV {self.key}: {self.value} ({self.expiry})>"
