@@ -42,6 +42,7 @@ class RdbParser:
     SECOND_EXPIRATION = 0xFD
     RDB_FILE_END = 0xFF
     STRING_TYPE = 0x0
+    RESIZEDB_BYTE = 0xFB
 
     def check_magic_bytes(self, cursor, data):
         for byte in self.MAGIC_BYTES:
@@ -104,6 +105,11 @@ class RdbParser:
         elif decision_bits == 2:
             cursor += 1
             return self.read_number(cursor, data, 4)
+        elif decision_bits == 3:
+            print("Special decision bit", 3)
+            print("Last six bits", self.get_last_six_bits(data[cursor]))
+            cursor += 1
+            return self.read_number(cursor, data, 8)
         raise Exception("Invalid length")
 
     def read_string_encoding(self, cursor, data):
@@ -162,16 +168,24 @@ class RdbParser:
                 cursor, db_number = self.read_db_number(cursor, data)
                 print("Database number", db_number)
                 rdb.add_database(db_number)
+                if data[cursor] == self.RESIZEDB_BYTE:
+                    print("Found resize db byte")
+                    print(f"Cursor before reading length 1: {cursor}")
+                    cursor, db_hash_size = self.read_length(cursor + 1, data)
+                    print(f"Cursor before reading length 2: {cursor}")
+                    cursor, expiry_hash_size = self.read_length(cursor, data)
+                    print(
+                        f"Db hash size {db_hash_size} expiry hash size {expiry_hash_size}, cursor: {cursor}"
+                    )
                 # Read key value pairs
                 state = self.State.READ_KEYS
             elif data[cursor] == self.RDB_FILE_END:
                 state = self.State.DONE
                 break
             elif state == self.State.READ_KEYS:
-                print("Reading keys", cursor)
+                print("Reading keys", cursor, data[cursor])
                 cursor, kv = self.read_key_value(cursor, data)
                 rdb.add_key_value(kv)
-                cursor += 1
             else:
                 cursor += 1
         return rdb
@@ -197,6 +211,7 @@ class KeyValue:
         return seconds * 1000
 
     def set_key_value(self, key, value, data_type):
+        print(f"Key: {key}, Value: {value}")
         self.key = key
         self.value = value
         self.data_type = data_type
