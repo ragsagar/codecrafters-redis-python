@@ -10,7 +10,7 @@ from .replica import Replica
 from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
 from .master_connection import MasterConnection
-from .rbd.parser import RdbParser
+from .rdb.parser import RdbParser
 
 sel = selectors.DefaultSelector()
 
