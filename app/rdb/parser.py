@@ -145,6 +145,7 @@ class RdbParser:
 
     # data is a bytes class
     def parse(self, data):
+        print("Parsing data", data)
         cursor = 0
         # data_bytes = [i.to_bytes(1, sys.byteorder) for i in data]
         rdb = RdbData()
