@@ -53,9 +53,10 @@ class RedisServer:
         else:
             self.setup_as_master()
         self.debug = debug
+        self.load_initial_data()
 
     def load_initial_data(self):
-        if self.server_type == self.ServerType.MASTER:
+        if self.server_type == self.ServerType.MASTER and self.rdb_filename:
             self.store.load_data(self.get_rdb_file_contents())
 
     def get_rdb_filepath(self):
