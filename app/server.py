@@ -35,7 +35,8 @@ class RedisServer:
         port=6379,
         master_server=None,
         master_port=None,
-        rdb_file_obj=None,
+        rdb_dir=None,
+        rdb_filename=None,
         debug=True,
     ):
         self.port = port
@@ -45,7 +46,8 @@ class RedisServer:
         self.master_port = int(master_port) if master_port else None
         self.store = KeyValueStore()
         self.command_handler = CommandHandler(self, store=self.store)
-        self.rdb_file_obj = rdb_file_obj
+        self.rdb_dir = rdb_dir
+        self.rdb_filename = rdb_filename
         if master_server:
             self.setup_as_slave()
         else:
@@ -62,6 +64,21 @@ class RedisServer:
         parser = RdbParser()
         rdb_data = parser.parse(self.rdb_file_obj.read())
         return rdb_data
+
+    def get_rdb_dir(self):
+        return self.rdb_dir
+
+    def get_rdb_filename(self):
+        return self.rdb_filename
+
+    def get_rdb_filepath(self):
+        return os.path.join(self.get_rdb_dir(), self.get_rdb_filename())
+
+    def get_rdb_contents(self):
+        filepath = self.get_rdb_filepath()
+        if os.path.exists(filepath):
+            return open(filepath, "rb").read()
+        return None
 
     def setup_as_slave(self):
         self.server_type = self.ServerType.SLAVE

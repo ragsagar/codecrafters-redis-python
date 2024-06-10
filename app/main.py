@@ -1,4 +1,3 @@
-import os
 import argparse
 from .server import RedisServer
 
@@ -23,17 +22,11 @@ def main():
         run_test()
         return
     port = args.port if args.port else DEFAULT_PORT
-    rdb_file_obj = None
-    if args.dbfilename:
-
-        db_file_path = os.path.join(args.dir, args.dbfilename)
-        if os.path.exists(db_file_path):
-            rdb_file_obj = open(db_file_path, "rb")
-        print("Using rdb file", args.dbfilename)
     server = RedisServer(
         port,
         debug=True,
-        rdb_file_obj=rdb_file_obj,
+        rdb_dir=args.dir,
+        rdb_filename=args.dbfilename,
         *replicate_server,
     )
     server.run()
