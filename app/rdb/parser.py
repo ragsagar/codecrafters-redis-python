@@ -58,7 +58,7 @@ class RdbParser:
 
     def read_number_from_bytes(self, cursor, data, length):
         integer_bytes = data[cursor : cursor + length]
-        integer = int.from_bytes(integer_bytes, byteorder="big")
+        integer = int.from_bytes(integer_bytes, byteorder="little")
         return cursor + length, integer
 
     def read_version(self, cursor, data):

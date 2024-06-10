@@ -33,11 +33,11 @@ class RDBParserTest(unittest.TestCase):
         self.assertEqual(cursor, 11)
         self.assertEqual(db_number, 0)
 
-    # def test_read_milliseconds(self):
-    #     parser = RdbParser()
-    #     cursor, milliseconds = parser.read_milliseconds(12, self.sample_rdb_data)
-    #     self.assertEqual(milliseconds, 1639887072573)
-    #     self.assertEqual(cursor, 20)
+    def test_read_milliseconds(self):
+        parser = RdbParser()
+        cursor, milliseconds = parser.read_milliseconds(12, self.sample_rdb_data)
+        self.assertEqual(milliseconds, 1671963072573)
+        self.assertEqual(cursor, 20)
 
     def test_read_key_with_expiry(self):
         parser = RdbParser()
@@ -80,3 +80,33 @@ class RDBParserTest(unittest.TestCase):
         self.assertEqual(kv.value, "strawberry")
         self.assertEqual(kv.data_type, 0)
         self.assertEqual(len(rdb.data), 1)
+
+    def test_parse_with_expiry(self):
+        sample = b"REDIS0003\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfe\x00\xfb\x05\x05\xfc\x00\x0c(\x8a\xc7\x01\x00\x00\x00\x05grape\x05apple\xfc\x00\x9c\xef\x12~\x01\x00\x00\x00\tblueberry\traspberry\xfc\x00\x0c(\x8a\xc7\x01\x00\x00\x00\nstrawberry\x06banana\xfc\x00\x0c(\x8a\xc7\x01\x00\x00\x00\traspberry\x05grape\xfc\x00\x0c(\x8a\xc7\x01\x00\x00\x00\x04pear\x06orange\xff\xe3\x9e\x877{\xfbW\xd1\n"
+        parser = RdbParser()
+        rdb = parser.parse(sample)
+        self.assertEqual(rdb.version, 3)
+        kv = rdb.data[0][0]
+        self.assertEqual(kv.key, "grape")
+        self.assertEqual(kv.value, "apple")
+        self.assertEqual(kv.expiry, 1956528000000)
+
+        kv = rdb.data[0][1]
+        self.assertEqual(kv.key, "blueberry")
+        self.assertEqual(kv.value, "raspberry")
+        self.assertEqual(kv.expiry, 1640995200000)
+
+        kv = rdb.data[0][2]
+        self.assertEqual(kv.key, "strawberry")
+        self.assertEqual(kv.value, "banana")
+        self.assertEqual(kv.expiry, 1956528000000)
+
+        kv = rdb.data[0][3]
+        self.assertEqual(kv.key, "raspberry")
+        self.assertEqual(kv.value, "grape")
+        self.assertEqual(kv.expiry, 1956528000000)
+
+        kv = rdb.data[0][4]
+        self.assertEqual(kv.key, "pear")
+        self.assertEqual(kv.value, "orange")
+        self.assertEqual(kv.expiry, 1956528000000)
