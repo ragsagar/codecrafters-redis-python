@@ -172,6 +172,8 @@ class RdbParser:
                 cursor, kv = self.read_key_value(cursor, data)
                 rdb.add_key_value(kv)
                 cursor += 1
+            else:
+                cursor += 1
         return rdb
 
 

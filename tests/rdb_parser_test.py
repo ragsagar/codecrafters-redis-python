@@ -69,3 +69,15 @@ class RDBParserTest(unittest.TestCase):
         self.assertEqual(kv.value, "2022-12-25 10:11:12.573 UTC")
         self.assertEqual(kv.data_type, 0)
         self.assertEqual(len(rdb.data), 1)
+
+    def test_parse_with_one_key(self):
+        sample = b"REDIS0003\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfe\x00\xfb\x01\x00\x00\x06orange\tpineapple\xffo&Y{\xe5\xe0\xe3\xf0\n"
+        parser = RdbParser()
+        rdb = parser.parse(sample)
+
+        self.assertEqual(rdb.version, 4)
+        kv = rdb.data[0][0]
+        self.assertEqual(kv.key, "orange")
+        self.assertEqual(kv.value, "pineapple")
+        self.assertEqual(kv.data_type, 0)
+        self.assertEqual(len(rdb.data), 1)
