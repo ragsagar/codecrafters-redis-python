@@ -21,6 +21,9 @@ class RdbData:
     def add_key_value(self, kv):
         self.data[self.current_selector].append(kv)
 
+    def __str__(self):
+        return f"RDBData: {self.version} {self.data}"
+
 
 class InvalidRdbFileException(Exception):
     pass

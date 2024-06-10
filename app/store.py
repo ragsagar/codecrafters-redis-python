@@ -39,4 +39,5 @@ class KeyValueStore:
     def load_data_from_rdb(self, rdb):
         for db in rdb.data:
             for kv in db:
+                print("KV", kv)
                 self.set(kv.key, kv.value, kv.expiry)

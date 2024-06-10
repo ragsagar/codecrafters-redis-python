@@ -1,3 +1,0 @@
-
-class RdbParser:
-    pass
