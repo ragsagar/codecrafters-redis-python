@@ -1,4 +1,4 @@
-import traceback
+import os
 import datetime
 import socket
 import selectors
@@ -10,6 +10,7 @@ from .replica import Replica
 from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
 from .master_connection import MasterConnection
+from .rbd.parser import RdbParser
 
 sel = selectors.DefaultSelector()
 
@@ -52,6 +53,21 @@ class RedisServer:
         else:
             self.setup_as_master()
         self.debug = debug
+
+    def load_initial_data(self):
+        if self.server_type == self.ServerType.MASTER:
+            self.store.load_data(self.get_rdb_file_contents())
+
+    def get_rdb_filepath(self):
+        return os.path.join(self.rdb_dir, self.rdb_filename)
+
+    def get_rdb_file_data(self):
+        return open(self.get_rdb_filepath(), "rb").read()
+
+    def parse_rdb_file(self):
+        parser = RdbParser()
+        rdb_data = parser.parse(self.get_rdb_file_data())
+        self.store.load_data_from_rdb(rdb_data)
 
     def setup_as_slave(self):
         self.server_type = self.ServerType.SLAVE
