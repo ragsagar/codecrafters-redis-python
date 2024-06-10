@@ -56,13 +56,15 @@ class RedisServer:
         self.load_initial_data()
 
     def load_initial_data(self):
-        if self.server_type == self.ServerType.MASTER and self.rdb_file_obj:
-            rdb_data = self.parse_rdb_file()
-            self.store.load_data_from_rdb(rdb_data)
+        if self.server_type == self.ServerType.MASTER and self.rdb_dir:
+            raw_rdb_data = self.get_rdb_contents()
+            if raw_rdb_data:
+                rdb_data = self.parse_rdb_file(raw_rdb_data)
+                self.store.load_data_from_rdb(rdb_data)
 
-    def parse_rdb_file(self):
+    def parse_rdb_file(self, contents):
         parser = RdbParser()
-        rdb_data = parser.parse(self.rdb_file_obj.read())
+        rdb_data = parser.parse(contents)
         return rdb_data
 
     def get_rdb_dir(self):
