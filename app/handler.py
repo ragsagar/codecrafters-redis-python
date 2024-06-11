@@ -117,12 +117,20 @@ class CommandHandler:
 
     def _handle_type_command(self, data, cmd, sock):
         key = cmd.data[0].decode()
-        value = self.store.get(key)
-        if value:
-            response_msg = self.encoder.generate_bulkstring("string")
+        type_value = self.store.get_type(key)
+        if type_value:
+            response_msg = self.encoder.generate_bulkstring(type_value)
         else:
             response_msg = self.encoder.generate_bulkstring("none")
         return response_msg
+
+    def _handle_xadd_command(self, data, cmd, sock):
+        key = cmd.data[0].decode()
+        identifier = cmd.data[1].decode()
+        values = [i.decode() for i in cmd.data[2:]]
+        values = dict(zip(values[::2], values[1::2]))
+        identifier = self.store.add_stream_data(key, values)
+        return self.encoder.generate_simple_string(identifier)
 
     def parse_message(self, message):
         commands = self.parser.parse(message)

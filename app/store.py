@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 
 class KeyValueStore:
@@ -21,13 +22,20 @@ class KeyValueStore:
         if expiry_time:
             if expiry_time < datetime.datetime.now():
                 return
+        self.data[key] = {"value": value, "expiry_time": expiry_time, "type": "string"}
+
+    def add_stream_data(self, key, values, identifier=None, expiry_time=None):
+        if not identifier:
+            identifier = uuid.uuid4().hex[:10]
         self.data[key] = {
-            "value": value,
+            "value": values,
             "expiry_time": expiry_time,
+            "type": "stream",
+            "identifier": identifier,
         }
+        return identifier
 
     def expire_data(self):
-        print("Expiring data in store", self.data)
         for key in list(self.data.keys()):
             value = self.data[key]
             if value["expiry_time"] and value["expiry_time"] < datetime.datetime.now():
@@ -39,6 +47,12 @@ class KeyValueStore:
             return None
         return self.data[key]["value"]
 
+    def get_type(self, key):
+        if key not in self.data:
+            return None
+        else:
+            return self.data[key]["type"]
+
     def get_keys(self):
         return list(self.data.keys())
 
@@ -49,7 +63,6 @@ class KeyValueStore:
     def load_data_from_rdb(self, rdb):
         for db in rdb.data.values():
             for kv in db:
-                print("KV", kv)
                 expiry = None
                 if kv.expiry:
                     expiry = self.get_time_from_epoch(kv.expiry)
