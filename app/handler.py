@@ -128,8 +128,9 @@ class CommandHandler:
         key = cmd.data[0].decode()
         identifier = cmd.data[1].decode()
         values = [i.decode() for i in cmd.data[2:]]
+        print(values)
         values = dict(zip(values[::2], values[1::2]))
-        identifier = self.store.add_stream_data(key, values)
+        identifier = self.store.add_stream_data(key, values, identifier)
         return self.encoder.generate_simple_string(identifier)
 
     def parse_message(self, message):
