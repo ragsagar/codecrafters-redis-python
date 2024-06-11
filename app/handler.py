@@ -115,6 +115,15 @@ class CommandHandler:
         self.server.check_with_replicas()
         return None
 
+    def _handle_type_command(self, data, cmd, sock):
+        key = cmd.data[0].decode()
+        value = self.store.get(key)
+        if value:
+            response_msg = self.encoder.generate_bulkstring("string")
+        else:
+            response_msg = self.encoder.generate_null_string()
+        return response_msg
+
     def parse_message(self, message):
         commands = self.parser.parse(message)
         return commands
