@@ -121,7 +121,7 @@ class CommandHandler:
         if value:
             response_msg = self.encoder.generate_bulkstring("string")
         else:
-            response_msg = self.encoder.generate_null_string()
+            response_msg = self.encoder.generate_bulkstring("none")
         return response_msg
 
     def parse_message(self, message):
