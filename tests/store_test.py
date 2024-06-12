@@ -94,7 +94,13 @@ class TestGenerateIdentifier(unittest.TestCase):
         res = store.generate_stream_identifier("stream1", "123-*")
         self.assertEqual(res, "123-0")
 
-    def test_generate_incremenent_last_sequence(self):
+    def test_generate_seq_with_0_millis(self):
+        # Default sequence number should be 0
+        store = KeyValueStore()
+        res = store.generate_stream_identifier("stream1", "0-*")
+        self.assertEqual(res, "0-1")
+
+    def test_generate_increment_last_sequence(self):
         store = KeyValueStore()
         store.add_stream_data("stream1", ["value1"], identifier="123-4")
         res = store.generate_stream_identifier("stream1", "123-*")

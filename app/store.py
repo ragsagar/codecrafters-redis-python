@@ -106,6 +106,8 @@ class KeyValueStore:
         if milli_str == "*":
             return f"{milli_part}-{seq_str}"
         if seq_str == "*":
+            if milli_str == "0":
+                seq_part = 1
             return f"{milli_str}-{seq_part}"
         return f"{milli_part}-{seq_part}"
 
