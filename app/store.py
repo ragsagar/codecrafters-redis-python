@@ -168,6 +168,7 @@ class KeyValueStore:
     def get_stream_read(self, key, identifier):
         if key in self.data and self.data[key]["type"] == "stream":
             stream_data = self.data[key]["value"]
+            print("Stream data", stream_data)
             for data in stream_data:
                 print(data["identifier"], identifier)
                 if data["identifier"] == identifier:
