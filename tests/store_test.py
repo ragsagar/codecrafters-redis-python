@@ -118,3 +118,37 @@ class TestGenerateIdentifier(unittest.TestCase):
         millis, seq = res.split("-")
         self.assertTrue(millis.isdigit())
         self.assertEqual(seq, "2")
+
+
+class TestXrange(unittest.TestCase):
+    def test_xrange_returns_correct_values(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["foo", "bar"], identifier="123-4")
+        store.add_stream_data("stream1", ["value2"], identifier="123-5")
+        store.add_stream_data("stream1", ["value3"], identifier="123-6")
+        res = store.get_stream_range("stream1", "123-4", "123-5")
+        self.assertEqual(res, [["123-4", ["foo", "bar"]], ["123-5", ["value2"]]])
+
+    def test_xrange_returns_correct_values_different_millis(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["foo", "bar"], identifier="123-4")
+        store.add_stream_data("stream1", ["value2"], identifier="123-5")
+        store.add_stream_data("stream1", ["value3"], identifier="124-6")
+        store.add_stream_data("stream1", ["value4"], identifier="125-6")
+        res = store.get_stream_range("stream1", "123-4", "124-7")
+        self.assertEqual(
+            res,
+            [["123-4", ["foo", "bar"]], ["123-5", ["value2"]], ["124-6", ["value3"]]],
+        )
+
+    def test_xrange_returns_correct_values_empty_seq(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["foo", "bar"], identifier="123-4")
+        store.add_stream_data("stream1", ["value2"], identifier="123-5")
+        store.add_stream_data("stream1", ["value3"], identifier="124-6")
+        store.add_stream_data("stream1", ["value4"], identifier="125-6")
+        res = store.get_stream_range("stream1", "123", "124")
+        self.assertEqual(
+            res,
+            [["123-4", ["foo", "bar"]], ["123-5", ["value2"]], ["124-6", ["value3"]]],
+        )

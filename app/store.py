@@ -130,6 +130,30 @@ class KeyValueStore:
 
             return f"{millis_part}-{seq_part}"
 
+    def get_stream_range(self, key, start, end):
+        if key in self.data and self.data[key]["type"] == "stream":
+            try:
+                start_millis, start_seq = map(int, start.split("-"))
+            except ValueError:
+                start_millis, start_seq = int(start.split("-")[0]), -1
+            try:
+                end_millis, end_seq = map(int, end.split("-"))
+            except ValueError:
+                end_millis, end_seq = int(end.split("-")[0]), sys.maxsize
+            stream_data = self.data[key]["value"]
+            result = []
+            for data in stream_data:
+                millis, seq = map(int, data["identifier"].split("-"))
+                if start_millis <= millis <= end_millis:
+                    if start_millis == millis and seq < start_seq:
+                        continue
+                    if end_millis == millis and seq > end_seq:
+                        continue
+                    result.append([data["identifier"], data["values"]])
+            if result:
+                return result
+        return None
+
     def expire_data(self):
         for key in list(self.data.keys()):
             value = self.data[key]
