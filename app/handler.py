@@ -153,9 +153,12 @@ class CommandHandler:
         type_value = cmd.data[0].decode()
         print("Type value", type_value)
         if type_value == "streams":
-            key = cmd.data[1].decode()
-            identifier = cmd.data[2].decode()
-            messages = self.store.get_stream_read(key, identifier)
+            messages = []
+            for i in range(1, len(cmd.data), 2):
+                key = cmd.data[i].decode()
+                identifier = cmd.data[i + 1].decode()
+                message = self.store.get_stream_read(key, identifier)
+                messages.append(message)
             print("Got data", messages)
             return self.encoder.generate_array_string(messages)
         return None

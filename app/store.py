@@ -177,7 +177,7 @@ class KeyValueStore:
                 ):
                     result.append([data["identifier"], data["values"]])
             if result:
-                return [[key, result]]
+                return [key, result]
         return None
 
     def expire_data(self):

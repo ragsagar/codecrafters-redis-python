@@ -200,7 +200,8 @@ class TestXreadTestCase(unittest.TestCase):
         )
         res = store.get_stream_read("somekey", "1526985054069-0")
         expected = [
-            ["somekey", [["1526985054079-0", ["temperature", "37", "humidity", "94"]]]]
+            "somekey",
+            [["1526985054079-0", ["temperature", "37", "humidity", "94"]]],
         ]
         self.assertEqual(res, expected)
 
@@ -211,5 +212,5 @@ class TestXreadTestCase(unittest.TestCase):
         res = store.get_stream_read("raspberry", "0-0")
         self.assertEqual(
             res,
-            [["raspberry", [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]]]],
+            ["raspberry", [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]]],
         )
