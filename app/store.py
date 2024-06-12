@@ -89,27 +89,46 @@ class KeyValueStore:
             ):
                 raise ValueError("Lower than existing identifier")
 
+    def get_timestamp_in_millis(self):
+        return int(datetime.datetime.now().timestamp() * 1000)
+
     def generate_stream_identifier(self, key, identifier):
         if "*" not in identifier:
             return identifier
-        last_sequence = -1
-        milli_part = int(datetime.datetime.now().timestamp() * 1000)
-        if key in self.data:
-            last_identifier = self.data[key]["last_identifier"]
-            last_sequence = int(last_identifier.split("-")[1])
-        seq_part = last_sequence + 1
 
+        # if identifier is *, then generate new millis part and sequence part should start from 0
         if identifier == "*":
+            milli_part = self.get_timestamp_in_millis()
+            seq_part = 0
             return f"{milli_part}-{seq_part}"
 
-        milli_str, seq_str = identifier.split("-")
-        if milli_str == "*":
-            return f"{milli_part}-{seq_str}"
-        if seq_str == "*":
-            if milli_str == "0" and seq_part == 0:
+        given_milli_str, given_seq_str = identifier.split("-")
+
+        # if millis part is *, generate millis from current timestamp and use given sequence part
+        if given_milli_str == "*":
+            milli_part = int(datetime.datetime.now().timestamp() * 1000)
+            return f"{milli_part}-{given_seq_str}"
+
+        # if sequence part is *
+        # If given millis matches with last millis then sequence part should be last sequence part + 1
+        # else sequence should start from 0
+        # if given millis is 0, then sequence part should start from 1
+        if given_seq_str == "*":
+            last_millis = None
+            if key in self.data:
+                last_millis, last_sequence = map(
+                    int, self.data[key]["last_identifier"].split("-")
+                )
+
+            millis_part = int(given_milli_str)
+            if millis_part == last_millis:
+                seq_part = last_sequence + 1
+            elif millis_part == 0:
                 seq_part = 1
-            return f"{milli_str}-{seq_part}"
-        return f"{milli_part}-{seq_part}"
+            else:
+                seq_part = 0
+
+            return f"{millis_part}-{seq_part}"
 
     def expire_data(self):
         for key in list(self.data.keys()):

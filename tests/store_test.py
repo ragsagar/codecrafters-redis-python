@@ -106,6 +106,12 @@ class TestGenerateIdentifier(unittest.TestCase):
         res = store.generate_stream_identifier("stream1", "123-*")
         self.assertEqual(res, "123-5")
 
+    def test_seq_start_from_0_for_new_milli(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["value1"], identifier="123-4")
+        res = store.generate_stream_identifier("stream1", "124-*")
+        self.assertEqual(res, "124-0")
+
     def test_generate_millis_part(self):
         store = KeyValueStore()
         res = store.generate_stream_identifier("stream1", "*-2")
