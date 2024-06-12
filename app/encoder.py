@@ -16,6 +16,9 @@ class Encoder:
     def generate_null_string(self):
         return b"$-1\r\n"
 
+    def generate_error_string(self, message):
+        return f"-{message}\r\n".encode()
+
     def generate_success_string(self):
         return self.generate_simple_string("OK")
 
