@@ -148,6 +148,7 @@ class CommandHandler:
         # if len(cmd.data) > 3:
         #     count = int(cmd.data[3].decode())
         messages = self.store.get_stream_range(key, start, end)
+        print("Xrange response", messages)
         return self.encoder.generate_array_string(messages)
 
     def parse_message(self, message):
