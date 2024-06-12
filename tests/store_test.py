@@ -152,3 +152,14 @@ class TestXrange(unittest.TestCase):
             res,
             [["123-4", ["foo", "bar"]], ["123-5", ["value2"]], ["124-6", ["value3"]]],
         )
+
+    def test_xrange_upstream_test(self):
+        store = KeyValueStore()
+        store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-1")
+        store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-2")
+        store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-3")
+        res = store.get_stream_range("raspberry", "0-2", "0-3")
+        self.assertEqual(
+            res,
+            [["0-2", ["foo", "bar"]], ["0-3", ["foo", "bar"]]],
+        )

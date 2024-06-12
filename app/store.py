@@ -151,6 +151,7 @@ class KeyValueStore:
                         continue
                     result.append([data["identifier"], data["values"]])
             if result:
+                print("Stream result", result)
                 return result
         return None
 
