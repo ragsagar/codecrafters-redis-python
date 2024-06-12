@@ -137,10 +137,13 @@ class KeyValueStore:
 
     def get_stream_range(self, key, start, end):
         if key in self.data and self.data[key]["type"] == "stream":
-            try:
-                start_millis, start_seq = map(int, start.split("-"))
-            except ValueError:
-                start_millis, start_seq = int(start.split("-")[0]), -1
+            if start != "-":
+                try:
+                    start_millis, start_seq = map(int, start.split("-"))
+                except ValueError:
+                    start_millis, start_seq = int(start.split("-")[0]), -1
+            else:
+                start_millis, start_seq = 0, 0
             try:
                 end_millis, end_seq = map(int, end.split("-"))
             except ValueError:
