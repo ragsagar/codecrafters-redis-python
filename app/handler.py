@@ -140,6 +140,16 @@ class CommandHandler:
             return self.encoder.generate_error_string(str(e))
         return self.encoder.generate_simple_string(identifier)
 
+    def _handle_xrange_command(self, data, cmd, sock):
+        key = cmd.data[0].decode()
+        start = cmd.data[1].decode()
+        end = cmd.data[2].decode()
+        # count = None
+        # if len(cmd.data) > 3:
+        #     count = int(cmd.data[3].decode())
+        messages = self.store.get_stream_range(key, start, end)
+        return self.encoder.generate_array_string(messages)
+
     def parse_message(self, message):
         commands = self.parser.parse(message)
         return commands

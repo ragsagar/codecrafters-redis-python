@@ -75,3 +75,22 @@ class TestCommandHandler(unittest.TestCase):
         self.store.set("foo", "bar")
         res = self.handler.handle_message(self.create_data(msg), self.sock)
         self.assertEqual(res, b"*1\r\n$3\r\nfoo\r\n")
+
+
+class HandleXRangeTestCase(unittest.TestCase):
+    def setUp(self) -> None:
+        self.store = KeyValueStore()
+        self.handler = CommandHandler(DummyServer(), store=self.store)
+        self.sock = None
+
+    def create_data(self, msg):
+        return DataBuffer(outb=msg)
+
+    def test_xrange_returns_correct_values(self):
+        self.store.add_stream_data("stream1", ["value1"], identifier="0-1")
+        self.store.add_stream_data("stream1", ["value2"], identifier="0-2")
+        self.store.add_stream_data("stream1", ["value3"], identifier="0-3")
+        msg = b"*4\r\n$6\r\nxrange\r\n$7\r\nstream1\r\n$3\r\n0-2\r\n$3\r\n0-4\r\n"
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        expected = b"*2\r\n*2\r\n$3\r\n0-2\r\n*1\r\n$6\r\nvalue2\r\n*2\r\n$3\r\n0-3\r\n*1\r\n$6\r\nvalue3\r\n"
+        self.assertEqual(res, expected)
