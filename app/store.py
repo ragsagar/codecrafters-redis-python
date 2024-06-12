@@ -33,17 +33,22 @@ class KeyValueStore:
         self.validate_stream_identifier(key, identifier)
         identifier = self.generate_stream_identifier(key, identifier)
         if key in self.data:
-            self.data[key]["value"].append(
-                {"values": values, "identifier": identifier, "expiry_time": expiry_time}
-            )
+            item = {
+                "values": values,
+                "identifier": identifier,
+                "expiry_time": expiry_time,
+            }
+            self.data[key]["value"].append(item)
             self.data[key]["last_identifier"] = identifier
         else:
-            self.data[key] = {
+            item = {
                 "value": [{"values": values, "identifier": identifier}],
                 "expiry_time": expiry_time,
                 "type": "stream",
                 "last_identifier": identifier,
             }
+            self.data[key] = item
+        print("Adding stream data", key, item)
         return identifier
 
     def validate_stream_identifier(self, key, identifier):
