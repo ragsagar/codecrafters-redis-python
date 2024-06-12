@@ -141,13 +141,16 @@ class KeyValueStore:
                 try:
                     start_millis, start_seq = map(int, start.split("-"))
                 except ValueError:
-                    start_millis, start_seq = int(start.split("-")[0]), -1
+                    start_millis, start_seq = int(start.split("-")[0]), 0
             else:
                 start_millis, start_seq = 0, 0
-            try:
-                end_millis, end_seq = map(int, end.split("-"))
-            except ValueError:
-                end_millis, end_seq = int(end.split("-")[0]), sys.maxsize
+            if end != "+":
+                try:
+                    end_millis, end_seq = map(int, end.split("-"))
+                except ValueError:
+                    end_millis, end_seq = int(end.split("-")[0]), sys.maxsize
+            else:
+                end_millis, end_seq = sys.maxsize, sys.maxsize
             stream_data = self.data[key]["value"]
             result = []
             for data in stream_data:

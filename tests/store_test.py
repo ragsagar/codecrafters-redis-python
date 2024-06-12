@@ -164,7 +164,7 @@ class TestXrange(unittest.TestCase):
             [["0-2", ["foo", "bar"]], ["0-3", ["foo", "bar"]]],
         )
 
-    def test_xrange_with_hyphen(self):
+    def test_xrange_start_with_hyphen(self):
         store = KeyValueStore()
         store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-1")
         store.add_stream_data("raspberry", ["bar", "baz"], identifier="0-2")
@@ -173,4 +173,15 @@ class TestXrange(unittest.TestCase):
         self.assertEqual(
             res,
             [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]],
+        )
+
+    def test_xrange_end_with_plus(self):
+        store = KeyValueStore()
+        store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-1")
+        store.add_stream_data("raspberry", ["bar", "baz"], identifier="0-2")
+        store.add_stream_data("raspberry", ["baz", "foo"], identifier="0-3")
+        res = store.get_stream_range("raspberry", "0-2", "+")
+        self.assertEqual(
+            res,
+            [["0-2", ["bar", "baz"]], ["0-3", ["baz", "foo"]]],
         )
