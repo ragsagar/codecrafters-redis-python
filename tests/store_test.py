@@ -211,5 +211,5 @@ class TestXreadTestCase(unittest.TestCase):
         res = store.get_stream_read("raspberry", "0-0")
         self.assertEqual(
             res,
-            ["raspberry", [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]]],
+            [["raspberry", [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]]]],
         )
