@@ -2,6 +2,10 @@ import datetime
 import uuid
 
 
+class ZeroIdentifier(Exception):
+    pass
+
+
 class KeyValueStore:
     def __init__(self):
         self.data = {}
@@ -24,16 +28,46 @@ class KeyValueStore:
                 return
         self.data[key] = {"value": value, "expiry_time": expiry_time, "type": "string"}
 
-    def add_stream_data(self, key, values, identifier=None, expiry_time=None):
-        if not identifier:
-            identifier = uuid.uuid4().hex[:10]
-        self.data[key] = {
-            "value": values,
-            "expiry_time": expiry_time,
-            "type": "stream",
-            "identifier": identifier,
-        }
+    def add_stream_data(self, key, values=[], identifier=None, expiry_time=None):
+        self.validate_stream_identifier(key, identifier)
+        if key in self.data:
+            self.data[key]["value"].append(
+                {"values": values, "identifier": identifier, "expiry_time": expiry_time}
+            )
+            self.data[key]["last_identifier"] = identifier
+        else:
+            self.data[key] = {
+                "value": [{"values": values, "identifier": identifier}],
+                "expiry_time": expiry_time,
+                "type": "stream",
+                "last_identifier": identifier,
+            }
         return identifier
+
+    def validate_stream_identifier(self, key, identifier):
+        if "-" not in identifier:
+            raise ValueError("Invalid stream identifier")
+        millisecs, sequence = identifier.split("-")
+        if not millisecs.isdigit() or not sequence.isdigit():
+            raise ValueError("Identifier not valid number")
+        if not millisecs or not sequence:
+            raise ValueError(
+                "Couldn't find identifier or sequence in stream identifier"
+            )
+        millisecs = int(millisecs)
+        sequence = int(sequence)
+        if millisecs == 0 and sequence == 0:
+            raise ZeroIdentifier(
+                "ERR The ID specified in XADD must be greater than 0-0"
+            )
+        if key in self.data:
+            existing_millis, existing_seq = map(
+                int, self.data[key]["last_identifier"].split("-")
+            )
+            if millisecs < existing_millis or (
+                millisecs == existing_millis and sequence <= existing_seq
+            ):
+                raise ValueError("Lower than existing identifier")
 
     def expire_data(self):
         for key in list(self.data.keys()):

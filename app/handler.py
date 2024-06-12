@@ -3,6 +3,7 @@ from enum import Enum
 
 from .parser import RespParser
 from .encoder import Encoder
+from .store import ZeroIdentifier
 
 
 class CommandHandler:
@@ -128,9 +129,15 @@ class CommandHandler:
         key = cmd.data[0].decode()
         identifier = cmd.data[1].decode()
         values = [i.decode() for i in cmd.data[2:]]
-        print(values)
-        values = dict(zip(values[::2], values[1::2]))
-        identifier = self.store.add_stream_data(key, values, identifier)
+        values = zip(values[::2], values[1::2])
+        try:
+            identifier = self.store.add_stream_data(key, values, identifier)
+        except ValueError as e:
+            return self.encoder.generate_error_string(
+                "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+            )
+        except ZeroIdentifier as e:
+            return self.encoder.generate_error_string(str(e))
         return self.encoder.generate_simple_string(identifier)
 
     def parse_message(self, message):

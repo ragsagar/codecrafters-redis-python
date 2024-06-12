@@ -14,7 +14,6 @@ class RdbData:
         self.version = version
 
     def add_database(self, number):
-        print(self.data, number)
         self.data[number] = []
         self.current_selector = number
 
@@ -66,17 +65,13 @@ class RdbParser:
 
     def read_db_number(self, cursor, data):
         cursor += 1
-        print("Reading db number")
         return self.read_length(cursor, data)
 
     def read_seconds(self, cursor, data):
         return self.read_number_from_bytes(cursor, data, 4)
 
     def read_milliseconds(self, cursor, data):
-        print("Read millis", cursor)
         return self.read_number_from_bytes(cursor, data, 8)
-        # print("Reading milliseconds")
-        # return self.read_length(cursor, data)
 
     def convert_sec_to_milli(self, seconds):
         return seconds * 1000
@@ -89,12 +84,8 @@ class RdbParser:
 
     def read_length(self, cursor, data):
         decision_bits = self.get_two_most_signifcant_bit(data[cursor])
-        print(
-            "decision bits", decision_bits, "cursor", cursor, "data", chr(data[cursor])
-        )
         if decision_bits == 0:
             # Take the next 6 bits as the length
-            print("Reading lenght from next 6 bits")
             length = self.get_last_six_bits(data[cursor])
             return cursor + 1, length
         elif decision_bits == 1:
@@ -106,8 +97,6 @@ class RdbParser:
             cursor += 1
             return self.read_number(cursor, data, 4)
         elif decision_bits == 3:
-            print("Special decision bit", 3)
-            print("Last six bits", self.get_last_six_bits(data[cursor]))
             cursor += 1
             return self.read_number(cursor, data, 8)
         raise Exception("Invalid length")
@@ -166,24 +155,16 @@ class RdbParser:
         while cursor < len(data) and self.state != self.State.DONE:
             if data[cursor] == self.DATABASE_SELECTOR:
                 cursor, db_number = self.read_db_number(cursor, data)
-                print("Database number", db_number)
                 rdb.add_database(db_number)
                 if data[cursor] == self.RESIZEDB_BYTE:
-                    print("Found resize db byte")
-                    print(f"Cursor before reading length 1: {cursor}")
                     cursor, db_hash_size = self.read_length(cursor + 1, data)
-                    print(f"Cursor before reading length 2: {cursor}")
                     cursor, expiry_hash_size = self.read_length(cursor, data)
-                    print(
-                        f"Db hash size {db_hash_size} expiry hash size {expiry_hash_size}, cursor: {cursor}"
-                    )
                 # Read key value pairs
                 state = self.State.READ_KEYS
             elif data[cursor] == self.RDB_FILE_END:
                 state = self.State.DONE
                 break
             elif state == self.State.READ_KEYS:
-                print("Reading keys", cursor, data[cursor])
                 cursor, kv = self.read_key_value(cursor, data)
                 rdb.add_key_value(kv)
             else:
@@ -211,7 +192,6 @@ class KeyValue:
         return seconds * 1000
 
     def set_key_value(self, key, value, data_type):
-        print(f"Key: {key}, Value: {value}")
         self.key = key
         self.value = value
         self.data_type = data_type
