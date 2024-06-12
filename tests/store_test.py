@@ -187,8 +187,8 @@ class TestXrange(unittest.TestCase):
         )
 
 
-class TestXaddTestCase(unittest.TestCase):
-    def test_xadd_returns_correct_values(self):
+class TestXreadTestCase(unittest.TestCase):
+    def test_xread_returns_correct_values(self):
         store = KeyValueStore()
         store.add_stream_data(
             "somekey", ["temperature", "36", "humidity", "95"], "1526985054069-0"
@@ -203,3 +203,13 @@ class TestXaddTestCase(unittest.TestCase):
             ["somekey", [["1526985054079-0", ["temperature", "37", "humidity", "94"]]]]
         ]
         self.assertEqual(res, expected)
+
+    def test_xread_with_non_existing_id(self):
+        store = KeyValueStore()
+        store.add_stream_data("raspberry", ["foo", "bar"], identifier="0-1")
+        store.add_stream_data("raspberry", ["bar", "baz"], identifier="0-2")
+        res = store.get_stream_read("raspberry", "0-0")
+        self.assertEqual(
+            res,
+            ["raspberry", [["0-1", ["foo", "bar"]], ["0-2", ["bar", "baz"]]]],
+        )

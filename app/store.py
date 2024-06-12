@@ -168,22 +168,16 @@ class KeyValueStore:
     def get_stream_read(self, key, identifier):
         if key in self.data and self.data[key]["type"] == "stream":
             stream_data = self.data[key]["value"]
-            print("Stream data", stream_data)
+            given_millis, given_seq = map(int, identifier.split("-"))
+            result = []
             for data in stream_data:
-                print(data["identifier"], identifier)
-                if data["identifier"] == identifier:
-                    index = stream_data.index(data)
-                    found_data = [
-                        [
-                            key,
-                            [
-                                [item["identifier"], item["values"]]
-                                for item in stream_data[index + 1 :]
-                            ],
-                        ]
-                    ]
-                    print("Found data", found_data)
-                    return found_data
+                current_millis, current_seq = map(int, data["identifier"].split("-"))
+                if current_millis > given_millis or (
+                    current_millis == given_millis and current_seq > given_seq
+                ):
+                    result.append([data["identifier"], data["values"]])
+            if result:
+                return [[key, result]]
         return None
 
     def expire_data(self):
