@@ -162,8 +162,27 @@ class KeyValueStore:
                         continue
                     result.append([data["identifier"], data["values"]])
             if result:
-                print("Stream result", result)
                 return result
+        return None
+
+    def get_stream_read(self, key, identifier):
+        if key in self.data and self.data[key]["type"] == "stream":
+            stream_data = self.data[key]["value"]
+            for data in stream_data:
+                print(data["identifier"], identifier)
+                if data["identifier"] == identifier:
+                    index = stream_data.index(data)
+                    found_data = [
+                        [
+                            key,
+                            [
+                                [item["identifier"], item["values"]]
+                                for item in stream_data[index + 1 :]
+                            ],
+                        ]
+                    ]
+                    print("Found data", found_data)
+                    return found_data
         return None
 
     def expire_data(self):

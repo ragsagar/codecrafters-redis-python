@@ -147,8 +147,18 @@ class CommandHandler:
         # if len(cmd.data) > 3:
         #     count = int(cmd.data[3].decode())
         messages = self.store.get_stream_range(key, start, end)
-        print("Xrange response", messages)
         return self.encoder.generate_array_string(messages)
+
+    def _handle_xread_command(self, data, cmd, sock):
+        type_value = cmd.data[0].decode()
+        print("Type value", type_value)
+        if type_value == "streams":
+            key = cmd.data[1].decode()
+            identifier = cmd.data[2].decode()
+            messages = self.store.get_stream_read(key, identifier)
+            print("Got data", messages)
+            return self.encoder.generate_array_string(messages)
+        return None
 
     def parse_message(self, message):
         commands = self.parser.parse(message)

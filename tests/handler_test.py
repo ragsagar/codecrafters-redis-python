@@ -77,7 +77,7 @@ class TestCommandHandler(unittest.TestCase):
         self.assertEqual(res, b"*1\r\n$3\r\nfoo\r\n")
 
 
-class HandleXRangeTestCase(unittest.TestCase):
+class HandleStreamTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.store = KeyValueStore()
         self.handler = CommandHandler(DummyServer(), store=self.store)
@@ -93,4 +93,19 @@ class HandleXRangeTestCase(unittest.TestCase):
         msg = b"*4\r\n$6\r\nxrange\r\n$7\r\nstream1\r\n$3\r\n0-2\r\n$3\r\n0-4\r\n"
         res = self.handler.handle_message(self.create_data(msg), self.sock)
         expected = b"*2\r\n*2\r\n$3\r\n0-2\r\n*1\r\n$6\r\nvalue2\r\n*2\r\n$3\r\n0-3\r\n*1\r\n$6\r\nvalue3\r\n"
+        self.assertEqual(res, expected)
+
+    def test_xread_returns_correct_values(self):
+        self.store.add_stream_data(
+            "somekey", ["temperature", "36", "humidity", "95"], "1526985054069-0"
+        )
+        self.store.add_stream_data(
+            "somekey",
+            ["temperature", "37", "humidity", "94"],
+            "1526985054079-0",
+        )
+        # msg = b"*3\r\n$5\r\nXREAD\r\n$7\r\nstreams\r\n*2\r\n$7\r\nsomekey\r\n$3\r\n1526985054069-0\r\n"
+        msg = b"*4\r\n$5\r\nXREAD\r\n$7\r\nstreams\r\n$7\r\nsomekey\r\n$15\r\n1526985054069-0\r\n"
+        res = self.handler.handle_message(self.create_data(msg), self.sock)
+        expected = b"*1\r\n*2\r\n$7\r\nsomekey\r\n*1\r\n*2\r\n$15\r\n1526985054079-0\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n"
         self.assertEqual(res, expected)

@@ -185,3 +185,21 @@ class TestXrange(unittest.TestCase):
             res,
             [["0-2", ["bar", "baz"]], ["0-3", ["baz", "foo"]]],
         )
+
+
+class TestXaddTestCase(unittest.TestCase):
+    def test_xadd_returns_correct_values(self):
+        store = KeyValueStore()
+        store.add_stream_data(
+            "somekey", ["temperature", "36", "humidity", "95"], "1526985054069-0"
+        )
+        store.add_stream_data(
+            "somekey",
+            ["temperature", "37", "humidity", "94"],
+            "1526985054079-0",
+        )
+        res = store.get_stream_read("somekey", "1526985054069-0")
+        expected = [
+            ["somekey", [["1526985054079-0", ["temperature", "37", "humidity", "94"]]]]
+        ]
+        self.assertEqual(res, expected)
