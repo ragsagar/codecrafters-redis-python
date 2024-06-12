@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import sys
 
 
 class ZeroIdentifier(Exception):
@@ -30,6 +31,7 @@ class KeyValueStore:
 
     def add_stream_data(self, key, values=[], identifier=None, expiry_time=None):
         self.validate_stream_identifier(key, identifier)
+        identifier = self.generate_stream_identifier(key, identifier)
         if key in self.data:
             self.data[key]["value"].append(
                 {"values": values, "identifier": identifier, "expiry_time": expiry_time}
@@ -45,29 +47,67 @@ class KeyValueStore:
         return identifier
 
     def validate_stream_identifier(self, key, identifier):
+        if identifier == "*":
+            return
         if "-" not in identifier:
             raise ValueError("Invalid stream identifier")
         millisecs, sequence = identifier.split("-")
-        if not millisecs.isdigit() or not sequence.isdigit():
+        if not (millisecs.isdigit() or millisecs == "*") or not (
+            sequence.isdigit() or sequence == "*"
+        ):
             raise ValueError("Identifier not valid number")
         if not millisecs or not sequence:
             raise ValueError(
                 "Couldn't find identifier or sequence in stream identifier"
             )
-        millisecs = int(millisecs)
-        sequence = int(sequence)
-        if millisecs == 0 and sequence == 0:
+        if millisecs == "*" and sequence == "*":
+            raise ValueError("Both identifier and sequence can't be *")
+
+        converted_millis = sys.maxsize
+        if millisecs != "*":
+            converted_millis = int(millisecs)
+
+        converted_sequence = sys.maxsize
+        if sequence != "*":
+            converted_sequence = int(sequence)
+
+        if converted_millis == 0 and converted_sequence == 0:
             raise ZeroIdentifier(
                 "ERR The ID specified in XADD must be greater than 0-0"
             )
         if key in self.data:
-            existing_millis, existing_seq = map(
-                int, self.data[key]["last_identifier"].split("-")
-            )
-            if millisecs < existing_millis or (
-                millisecs == existing_millis and sequence <= existing_seq
+            last_identifier = self.data[key]["last_identifier"]
+            existing_millis, existing_seq = map(int, last_identifier.split("-"))
+            if (
+                converted_millis == existing_millis
+                and converted_sequence == existing_seq
+            ):
+                raise ValueError("Identifier already exists")
+            if converted_millis < existing_millis or (
+                converted_millis == existing_millis
+                and converted_sequence <= existing_seq
             ):
                 raise ValueError("Lower than existing identifier")
+
+    def generate_stream_identifier(self, key, identifier):
+        if "*" not in identifier:
+            return identifier
+        last_sequence = -1
+        milli_part = int(datetime.datetime.now().timestamp() * 1000)
+        if key in self.data:
+            last_identifier = self.data[key]["last_identifier"]
+            last_sequence = int(last_identifier.split("-")[1])
+        seq_part = last_sequence + 1
+
+        if identifier == "*":
+            return f"{milli_part}-{seq_part}"
+
+        milli_str, seq_str = identifier.split("-")
+        if milli_str == "*":
+            return f"{milli_part}-{seq_str}"
+        if seq_str == "*":
+            return f"{milli_str}-{seq_part}"
+        return f"{milli_part}-{seq_part}"
 
     def expire_data(self):
         for key in list(self.data.keys()):

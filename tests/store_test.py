@@ -43,6 +43,12 @@ class TestStreamInKVStore(unittest.TestCase):
         with self.assertRaises(ValueError):
             store.add_stream_data("stream1", ["value2"], identifier="123-2")
 
+    def test_sequence_part_with_asterisk_on_existing_stream(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["value1"], identifier="123-4")
+        res = store.add_stream_data("stream1", ["value2"], identifier="123-*")
+        self.assertEqual(res, "123-5")
+
     def test_identifier_is_valid_non_number(self):
         store = KeyValueStore()
         with self.assertRaises(ValueError):
@@ -63,3 +69,40 @@ class TestStreamInKVStore(unittest.TestCase):
         store = KeyValueStore()
         with self.assertRaises(ZeroIdentifier):
             store.add_stream_data("stream1", ["value2"], identifier="0-0")
+
+    def test_identifier_is_valid_with_seq_asterisk(self):
+        store = KeyValueStore()
+        res = store.add_stream_data("stream1", ["value2"], identifier="1-*")
+        self.assertEqual(res, "1-0")
+
+    def test_identifier_with_seq_asterisk(self):
+        store = KeyValueStore()
+        res = store.add_stream_data("stream1", ["value2"], identifier="*")
+        self.assertIsNotNone(res)
+
+
+class TestGenerateIdentifier(unittest.TestCase):
+    def test_generate_identifier_with_seq_asterisk(self):
+        store = KeyValueStore()
+        res = store.generate_stream_identifier("stream1", "*")
+        self.assertIsNotNone(res)
+        self.assertTrue("-" in res)
+
+    def test_generate_identifier_with_time_asterisk(self):
+        # Default sequence number should be 0
+        store = KeyValueStore()
+        res = store.generate_stream_identifier("stream1", "123-*")
+        self.assertEqual(res, "123-0")
+
+    def test_generate_incremenent_last_sequence(self):
+        store = KeyValueStore()
+        store.add_stream_data("stream1", ["value1"], identifier="123-4")
+        res = store.generate_stream_identifier("stream1", "123-*")
+        self.assertEqual(res, "123-5")
+
+    def test_generate_millis_part(self):
+        store = KeyValueStore()
+        res = store.generate_stream_identifier("stream1", "*-2")
+        millis, seq = res.split("-")
+        self.assertTrue(millis.isdigit())
+        self.assertEqual(seq, "2")
