@@ -256,7 +256,6 @@ class RedisServer:
 
     def expire_stream_blocks(self):
         for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
-            print("Expirt time", expiry_time, "Current time", datetime.datetime.now())
             if expiry_time <= datetime.datetime.now():
                 print("Expiring stream blocking client", sock.getpeername())
                 self.sendall(self.encoder.generate_null_string(), sock)
@@ -264,7 +263,13 @@ class RedisServer:
                 sock.close()
 
     def send_data_to_stream_clients(self, key, identifier, data):
-        print("Sending data to stream clients", key, identifier, data)
+        print(
+            "Sending data to stream clients",
+            key,
+            identifier,
+            data,
+            datetime.datetime.now(),
+        )
         for index, (sock, stream_key, stream_identifier, _) in enumerate(
             self.stream_blocking_clients
         ):
