@@ -254,7 +254,6 @@ class RedisServer:
         self.stream_blocking_clients.append((sock, key, identifier, expiry_time))
 
     def expire_stream_blocks(self):
-        print("Expiring stream blocking clients")
         for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
             if expiry_time <= datetime.datetime.now():
                 print("Expiring stream blocking client", sock.getpeername())
