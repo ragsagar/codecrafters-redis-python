@@ -140,7 +140,7 @@ class CommandHandler:
             return self.encoder.generate_error_string(str(e))
         if saved_id:
             data = [key, [saved_id, saved_values]]
-            self.server.send_data_to_stream_clients(key, saved_id, [data])
+            self.server.send_data_to_stream_clients(key, saved_id, data)
         return self.encoder.generate_simple_string(identifier)
 
     def _handle_xrange_command(self, data, cmd, sock):
