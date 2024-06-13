@@ -48,7 +48,7 @@ class KeyValueStore:
                 "last_identifier": identifier,
             }
             self.data[key] = item
-        return identifier
+        return identifier, values
 
     def validate_stream_identifier(self, key, identifier):
         if identifier == "*":

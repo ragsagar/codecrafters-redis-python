@@ -47,7 +47,7 @@ class TestStreamInKVStore(unittest.TestCase):
         store = KeyValueStore()
         store.add_stream_data("stream1", ["value1"], identifier="123-4")
         res = store.add_stream_data("stream1", ["value2"], identifier="123-*")
-        self.assertEqual(res, "123-5")
+        self.assertEqual(res, ("123-5", ["value2"]))
 
     def test_identifier_is_valid_non_number(self):
         store = KeyValueStore()
@@ -73,7 +73,7 @@ class TestStreamInKVStore(unittest.TestCase):
     def test_identifier_is_valid_with_seq_asterisk(self):
         store = KeyValueStore()
         res = store.add_stream_data("stream1", ["value2"], identifier="1-*")
-        self.assertEqual(res, "1-0")
+        self.assertEqual(res, ("1-0", ["value2"]))
 
     def test_identifier_with_seq_asterisk(self):
         store = KeyValueStore()

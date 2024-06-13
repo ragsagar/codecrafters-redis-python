@@ -5,7 +5,7 @@ import selectors
 import types
 from enum import Enum
 from .encoder import Encoder
-from .utils import generate_repl_id
+from .utils import generate_repl_id, is_bigger_stream_id
 from .replica import Replica
 from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
@@ -29,6 +29,7 @@ class RedisServer:
     waiting_clients = []
     last_processed = 0
     replicas = []
+    stream_blocking_clients = []
 
     def __init__(
         self,
@@ -219,6 +220,7 @@ class RedisServer:
 
     def periodic_checks(self):
         self.check_if_client_waiting()
+        self.expire_stream_blocks()
 
     def check_if_client_waiting(self):
         processed_replicas = self.processed_replicas()
@@ -246,6 +248,26 @@ class RedisServer:
     def add_waiter(self, sock, min_count, timeout):
         expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
         self.waiting_clients.append((sock, min_count, expiry_time))
+
+    def add_stream_blocking_client(self, sock, key, identifier, timeout):
+        expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
+        self.stream_blocking_clients.append((sock, key, identifier, expiry_time))
+
+    def expire_stream_blocks(self):
+        for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
+            if expiry_time <= datetime.datetime.now():
+                self.sendall(self.encoder.generate_null_string(), sock)
+                del self.stream_blocking_clients[index]
+                sock.close()
+
+    def send_data_to_stream_clients(self, key, identifier, data):
+        for index, (sock, stream_key, stream_identifier, _) in enumerate(
+            self.stream_blocking_clients
+        ):
+            if stream_key == key and is_bigger_stream_id(identifier, stream_identifier):
+                self.sendall(data, sock)
+                del self.stream_blocking_clients[index]
+                sock.close()
 
     def processed_replicas(self):
         return sum([1 for i in self.replicas if i.is_processed()])
