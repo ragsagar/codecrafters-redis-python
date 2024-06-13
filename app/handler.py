@@ -131,15 +131,16 @@ class CommandHandler:
         values = [i.decode() for i in cmd.data[2:]]
         saved_id = None
         try:
-            saved_id, saved_values = self.store.add_stream_data(key, values, identifier)
+            saved_id = self.store.add_stream_data(key, values, identifier)
         except ValueError as e:
             return self.encoder.generate_error_string(
                 "ERR The ID specified in XADD is equal or smaller than the target stream top item"
             )
         except ZeroIdentifier as e:
             return self.encoder.generate_error_string(str(e))
-        if saved_id and saved_values:
-            self.server.send_data_to_stream_clients(key, saved_id, saved_values)
+        if saved_id:
+            data = self.store.get_stream_read(key, saved_id)
+            self.server.send_data_to_stream_clients(key, saved_id, [data])
         return self.encoder.generate_simple_string(identifier)
 
     def _handle_xrange_command(self, data, cmd, sock):
