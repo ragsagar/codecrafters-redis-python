@@ -131,7 +131,7 @@ class CommandHandler:
         values = [i.decode() for i in cmd.data[2:]]
         saved_id = None
         try:
-            saved_id = self.store.add_stream_data(key, values, identifier)
+            saved_id, _ = self.store.add_stream_data(key, values, identifier)
         except ValueError as e:
             return self.encoder.generate_error_string(
                 "ERR The ID specified in XADD is equal or smaller than the target stream top item"
