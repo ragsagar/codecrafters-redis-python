@@ -267,7 +267,7 @@ class RedisServer:
             self.stream_blocking_clients
         ):
             if stream_key == key and is_bigger_stream_id(identifier, stream_identifier):
-                self.sendall(data, sock)
+                self.sendall(self.encoder.generate_array_string(data), sock)
                 del self.stream_blocking_clients[index]
                 sock.close()
 
