@@ -164,8 +164,11 @@ class CommandHandler:
                 if message:
                     messages.append(message)
             return self.encoder.generate_array_string(messages)
-        if type_value == "block":
-            return self.encoder.generate_null_string()
+        elif type_value == "block":
+            timeout = int(cmd.data[1].decode())
+            key = cmd.data[3].decode()
+            identifier = cmd.data[4].decode()
+            self.server.add_stream_blocking_client(sock, key, identifier, timeout)
         return None
 
     def parse_message(self, message):
