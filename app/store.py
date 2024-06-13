@@ -48,7 +48,6 @@ class KeyValueStore:
                 "last_identifier": identifier,
             }
             self.data[key] = item
-        print("Adding stream data", key, item)
         return identifier
 
     def validate_stream_identifier(self, key, identifier):

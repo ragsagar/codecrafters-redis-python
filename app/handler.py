@@ -151,18 +151,18 @@ class CommandHandler:
 
     def _handle_xread_command(self, data, cmd, sock):
         type_value = cmd.data[0].decode()
-        print("Type value", type_value)
         if type_value == "streams":
             messages = []
-            length = len(cmd.data[1:])
-            print(list(range(1, length // 2)))
-            for i in range(0, length // 2):
-                key = cmd.data[i + 1].decode()
-                identifier = cmd.data[length - i].decode()
+            stream_data = cmd.data[1:]
+            length = len(stream_data)
+            print("Stream data", stream_data)
+            for key, identifier in list(
+                zip(stream_data[: length // 2], stream_data[length // 2 :])
+            ):
                 print(f"key: {key}, identifier: {identifier}")
-                message = self.store.get_stream_read(key, identifier)
-                messages.append(message)
-            print("Got data", messages)
+                message = self.store.get_stream_read(key.decode(), identifier.decode())
+                if message:
+                    messages.append(message)
             return self.encoder.generate_array_string(messages)
         return None
 

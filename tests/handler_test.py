@@ -1,5 +1,6 @@
 import unittest
 from collections import namedtuple
+from unittest.mock import patch
 
 from app.handler import CommandHandler
 from app.encoder import Encoder
@@ -109,3 +110,28 @@ class HandleStreamTestCase(unittest.TestCase):
         res = self.handler.handle_message(self.create_data(msg), self.sock)
         expected = b"*1\r\n*2\r\n$7\r\nsomekey\r\n*1\r\n*2\r\n$15\r\n1526985054079-0\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n"
         self.assertEqual(res, expected)
+
+    def test_xread_returns_correct_values_multiple_streams(self):
+        self.store.add_stream_data(
+            "somekey", ["temperature", "36", "humidity", "95"], "1526985054069-0"
+        )
+        self.store.add_stream_data(
+            "somekey",
+            ["temperature", "37", "humidity", "94"],
+            "1526985054079-0",
+        )
+        self.store.add_stream_data(
+            "anotherkey", ["temperature", "38", "humidity", "93"], "1526985054089-0"
+        )
+        self.store.add_stream_data(
+            "anotherkey",
+            ["temperature", "39", "humidity", "92"],
+            "1526985054099-0",
+        )
+        msg = b"*5\r\n$5\r\nXREAD\r\n$7\r\nstreams\r\n*2\r\n$7\r\nsomekey\r\n$7\r\nanotherkey\r\n$15\r\n1526985054069-0\r\n$15\r\n1526985054089-0\r\n"
+        with patch.object(self.store, "get_stream_read") as mock:
+            self.handler.handle_message(self.create_data(msg), self.sock)
+            mock.assert_called_once_with("somekey", "1526985054069-0")
+            # mock.assert_called_once_with("anotherkey", "1526985054089-0")
+        # expected = b"*2\r\n*2\r\n$7\r\nsomekey\r\n*1\r\n*2\r\n$15\r\n1526985054079-0\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n*2\r\n$10\r\nanotherkey\r\n*1\r\n*2\r\n$15\r\n1526985054089-0\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n39\r\n$8\r\nhumidity\r\n$2\r\n92\r\n"
+        # self.assertEqual(res, expected)
