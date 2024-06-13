@@ -139,6 +139,8 @@ class CommandHandler:
         except ZeroIdentifier as e:
             return self.encoder.generate_error_string(str(e))
         if saved_id:
+            print("Store data", self.store.data)
+            print("Refetching data for stream", key, saved_id)
             data = self.store.get_stream_read(key, saved_id)
             self.server.send_data_to_stream_clients(key, saved_id, [data])
         return self.encoder.generate_simple_string(identifier)
