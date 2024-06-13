@@ -260,7 +260,6 @@ class RedisServer:
                 print("Expiring stream blocking client", sock.getpeername())
                 self.sendall(self.encoder.generate_null_string(), sock)
                 del self.stream_blocking_clients[index]
-                sock.close()
 
     def send_data_to_stream_clients(self, key, identifier, data):
         print(
@@ -276,7 +275,6 @@ class RedisServer:
             if stream_key == key and is_bigger_stream_id(identifier, stream_identifier):
                 self.sendall(self.encoder.generate_array_string(data), sock)
                 del self.stream_blocking_clients[index]
-                sock.close()
 
     def processed_replicas(self):
         return sum([1 for i in self.replicas if i.is_processed()])
