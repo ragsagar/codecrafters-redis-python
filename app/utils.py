@@ -6,6 +6,8 @@ def generate_repl_id():
 
 
 def is_bigger_stream_id(id1, id2):
+    if id2 == "$":
+        return True
     id1_millisecs, id1_seq = id1.split("-")
     id2_millisecs, id2_seq = id2.split("-")
     if id1_millisecs == id2_millisecs:
