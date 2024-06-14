@@ -204,9 +204,9 @@ class RedisServer:
             recv_data = sock.recv(1024)
             if recv_data:
                 data.outb += recv_data
-                self.log("Received", repr(recv_data), "from", data.addr)
+                self.log("Received %s from %s", repr(recv_data), data.addr)
             else:
-                self.log("Closing connection to", data.addr)
+                self.log("Closing connection to %s", data.addr)
                 sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
@@ -258,19 +258,21 @@ class RedisServer:
 
     def add_stream_blocking_client(self, sock, key, identifier, timeout):
         expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
-        logger.info(f"Set expiry time to {expiry_time} for client", sock.getpeername())
+        logger.info(
+            f"Set expiry time to {expiry_time} for client: %s", sock.getpeername()
+        )
         self.stream_blocking_clients.append((sock, key, identifier, expiry_time))
 
     def expire_stream_blocks(self):
         for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
             if expiry_time <= datetime.datetime.now():
-                logger.info("Expiring stream blocking client", sock.getpeername())
+                logger.info("Expiring stream blocking client: %s", sock.getpeername())
                 self.sendall(self.encoder.generate_null_string(), sock)
                 del self.stream_blocking_clients[index]
 
     def send_data_to_stream_clients(self, key, identifier, data):
         logger.info(
-            "Sending data to stream clients",
+            "Sending data to stream clients Key: %s Identifier: %s Data: %s %s",
             key,
             identifier,
             data,
@@ -295,14 +297,14 @@ class RedisServer:
             replica.update_processed(offset_count)
             self.log(f"Replica {replica.addr} processed {offset_count} commands")
         else:
-            self.log("Received offset from unknown replica", sock.getpeername())
+            self.log("Received offset from unknown replica: %s", sock.getpeername())
 
     def check_with_replicas(self):
         for replica in self.replicas:
             replica.check_processed()
 
     def sendall(self, message, sock):
-        logger.info(f"Sending message {message} to", sock.getpeername())
+        logger.info(f"Sending message {message} to %s", sock.getpeername())
         sock.sendall(message)
 
     def run(self):
