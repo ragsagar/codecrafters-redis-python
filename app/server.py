@@ -3,7 +3,6 @@ import datetime
 import socket
 import selectors
 import types
-import logging
 from enum import Enum
 from .encoder import Encoder
 from .utils import generate_repl_id, is_bigger_stream_id
@@ -12,10 +11,7 @@ from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
 from .master_connection import MasterConnection
 from .rdb.parser import RdbParser
-
-FORMAT = "%(asctime)s %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from .logger import logger
 
 sel = selectors.DefaultSelector()
 

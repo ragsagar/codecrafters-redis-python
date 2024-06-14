@@ -141,7 +141,7 @@ class CommandHandler:
         if saved_id:
             data = [[key, [[saved_id, saved_values]]]]
             self.server.send_data_to_stream_clients(key, saved_id, data)
-        return self.encoder.generate_simple_string(identifier)
+        return self.encoder.generate_simple_string(saved_id)
 
     def _handle_xrange_command(self, data, cmd, sock):
         key = cmd.data[0].decode()
