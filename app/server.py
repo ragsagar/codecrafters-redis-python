@@ -3,6 +3,7 @@ import datetime
 import socket
 import selectors
 import types
+import logging
 from enum import Enum
 from .encoder import Encoder
 from .utils import generate_repl_id, is_bigger_stream_id
@@ -11,6 +12,10 @@ from .handler import CommandHandler, ClientCommandHandler
 from .store import KeyValueStore
 from .master_connection import MasterConnection
 from .rdb.parser import RdbParser
+
+FORMAT = "%(asctime)s %(message)s"
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
 
 sel = selectors.DefaultSelector()
 
@@ -116,7 +121,7 @@ class RedisServer:
 
     def log(self, message, *args):
         if self.debug:
-            print(message, *args)
+            logger.info(message, *args)
 
     def get_repl_offset(self):
         return self.repl_offset
@@ -142,7 +147,7 @@ class RedisServer:
         self.store.set(key, value, expiry_time)
 
     def add_replica(self, addr, replica_id, offset, sock):
-        print(f"Adding replica {addr} {replica_id} at offset {offset}")
+        logger.info(f"Adding replica {addr} {replica_id} at offset {offset}")
         replica = Replica(addr, sock, offset, replica_id)
         self.replicas.append(replica)
 
@@ -229,11 +234,13 @@ class RedisServer:
             if processed_replicas != self.last_processed:
                 self.last_processed = processed_replicas
                 print_debug = True
-                print("Processed replicas count changed, checking with clients")
-                print(f"Client waiting for WAIT command: {len(self.waiting_clients)}")
+                logger.info("Processed replicas count changed, checking with clients")
+                logger.info(
+                    f"Client waiting for WAIT command: {len(self.waiting_clients)}"
+                )
         for index, (sock, min_count, expiry_time) in enumerate(self.waiting_clients):
             if print_debug:
-                print(
+                logger.info(
                     f"Processed replicas count: {processed_replicas}, expiry time: {expiry_time}, current: {datetime.datetime.now()}"
                 )
             if (
@@ -251,18 +258,18 @@ class RedisServer:
 
     def add_stream_blocking_client(self, sock, key, identifier, timeout):
         expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
-        print(f"Set expiry time to {expiry_time} for client", sock.getpeername())
+        logger.info(f"Set expiry time to {expiry_time} for client", sock.getpeername())
         self.stream_blocking_clients.append((sock, key, identifier, expiry_time))
 
     def expire_stream_blocks(self):
         for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
             if expiry_time <= datetime.datetime.now():
-                print("Expiring stream blocking client", sock.getpeername())
+                logger.info("Expiring stream blocking client", sock.getpeername())
                 self.sendall(self.encoder.generate_null_string(), sock)
                 del self.stream_blocking_clients[index]
 
     def send_data_to_stream_clients(self, key, identifier, data):
-        print(
+        logger.info(
             "Sending data to stream clients",
             key,
             identifier,
@@ -282,7 +289,9 @@ class RedisServer:
     def received_replica_offset(self, offset_count, sock):
         replica = next((i for i in self.replicas if i.socket == sock), None)
         if replica:
-            print("Received offset from replica", replica.addr, offset_count)
+            logger.info(
+                "Received offset from replica %s %s", replica.addr, offset_count
+            )
             replica.update_processed(offset_count)
             self.log(f"Replica {replica.addr} processed {offset_count} commands")
         else:
@@ -293,7 +302,7 @@ class RedisServer:
             replica.check_processed()
 
     def sendall(self, message, sock):
-        print(f"Sending message {message} to", sock.getpeername())
+        logger.info(f"Sending message {message} to", sock.getpeername())
         sock.sendall(message)
 
     def run(self):
