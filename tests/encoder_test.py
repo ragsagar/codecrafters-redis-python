@@ -21,3 +21,11 @@ class TestEncoder(unittest.TestCase):
             res,
             b"*2\r\n$1\r\n1\r\n*2\r\n$1\r\n2\r\n$1\r\n3\r\n",
         )
+
+    def test_xadd_array_encoding(self):
+        encoder = Encoder()
+        input_list = [["stream_key", [["0-2", ["temperature", "96"]]]]]
+        res = encoder.generate_array_string(input_list)
+        print("Res", res)
+        expected = b"*1\r\n*2\r\n$10\r\nstream_key\r\n*1\r\n*2\r\n$3\r\n0-2\r\n*2\r\n$11\r\ntemperature\r\n$2\r\n96\r\n"
+        self.assertEqual(res, expected)
