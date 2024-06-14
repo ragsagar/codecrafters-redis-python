@@ -14,7 +14,7 @@ from .master_connection import MasterConnection
 from .rdb.parser import RdbParser
 
 FORMAT = "%(asctime)s %(message)s"
-logging.basicConfig(format=FORMAT)
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 sel = selectors.DefaultSelector()
