@@ -254,7 +254,7 @@ class RedisServer:
 
     def add_stream_blocking_client(self, sock, key, identifier, timeout):
         expiry_time = None
-        if timeout == "0":
+        if int(timeout) != 0:
             expiry_time = datetime.datetime.now() + datetime.timedelta(
                 milliseconds=timeout
             )
