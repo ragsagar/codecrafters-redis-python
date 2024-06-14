@@ -253,7 +253,11 @@ class RedisServer:
         self.waiting_clients.append((sock, min_count, expiry_time))
 
     def add_stream_blocking_client(self, sock, key, identifier, timeout):
-        expiry_time = datetime.datetime.now() + datetime.timedelta(milliseconds=timeout)
+        expiry_time = None
+        if timeout == "0":
+            expiry_time = datetime.datetime.now() + datetime.timedelta(
+                milliseconds=timeout
+            )
         logger.info(
             f"Set expiry time to {expiry_time} for client: %s", sock.getpeername()
         )
@@ -261,7 +265,7 @@ class RedisServer:
 
     def expire_stream_blocks(self):
         for index, (sock, _, _, expiry_time) in enumerate(self.stream_blocking_clients):
-            if expiry_time <= datetime.datetime.now():
+            if expiry_time and expiry_time <= datetime.datetime.now():
                 logger.info("Expiring stream blocking client: %s", sock.getpeername())
                 self.sendall(self.encoder.generate_null_string(), sock)
                 del self.stream_blocking_clients[index]
@@ -279,7 +283,7 @@ class RedisServer:
         ):
             if stream_key == key and is_bigger_stream_id(identifier, stream_identifier):
                 self.sendall(self.encoder.generate_array_string(data), sock)
-                del self.stream_blocking_clients[index]
+                # del self.stream_blocking_clients[index]
 
     def processed_replicas(self):
         return sum([1 for i in self.replicas if i.is_processed()])
